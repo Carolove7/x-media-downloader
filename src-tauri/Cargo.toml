@@ -17,3 +17,8 @@ futures-util = "0.3"
 chrono = "0.4"
 thiserror = "1.0"
 dirs = "5.0"
+
+[features]
+# 生产构建 / 未在 tauri.conf.json 指定 dev server 时由 Tauri CLI 启用
+# 该 feature 必须转发给 tauri crate 的 custom-protocol
+custom-protocol = ["tauri/custom-protocol"]
