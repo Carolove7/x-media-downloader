@@ -4,10 +4,11 @@ mod downloader;
 mod twitter_client;
 mod types;
 
+use chrono::Local;
 use downloader::DownloadManager;
 use std::sync::Mutex;
-use tauri::{AppHandle, State};
-use types::AppConfig;
+use tauri::{AppHandle, Manager, State};
+use types::{AppConfig, LogPayload};
 
 struct AppState {
     downloader: Mutex<Option<DownloadManager>>,
@@ -55,7 +56,25 @@ async fn start_download(app: AppHandle, state: State<'_, AppState>, config: AppC
     };
 
     tokio::spawn(async move {
-        let _ = mgr.run(app, config).await;
+        if let Err(e) = mgr.run(app.clone(), config).await {
+            let now = Local::now().format("%H:%M:%S").to_string();
+            let _ = app.emit_all(
+                "download-log",
+                LogPayload {
+                    level: "warn".into(),
+                    message: format!(">>> 任务执行出错，已终止: {e}"),
+                    timestamp: now.clone(),
+                },
+            );
+            let _ = app.emit_all(
+                "download-log",
+                LogPayload {
+                    level: "warn".into(),
+                    message: ">>> 请检查 Cookie 是否有效、网络能否访问 twitter.com".into(),
+                    timestamp: now,
+                },
+            );
+        }
     });
 
     Ok(())

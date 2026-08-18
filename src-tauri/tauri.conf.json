@@ -7,9 +7,10 @@
   },
   "package": {
     "productName": "TwitterDownloader",
-    "version": "1.0.0"
+    "version": "1.0.1"
   },
   "tauri": {
+    "withGlobalTauri": true,
     "allowlist": {
       "all": false,
       "dialog": {
