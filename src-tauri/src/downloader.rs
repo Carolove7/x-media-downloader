@@ -71,10 +71,9 @@ impl DownloadManager {
         // 3. 并发下载
         let concurrency = config.concurrency.unwrap_or(8).clamp(1, 32);
         let semaphore = Arc::new(Semaphore::new(concurrency));
-        let http_client = Client::builder()
-            .timeout(std::time::Duration::from_secs(30))
-            .build()
-            .map_err(|e| e.to_string())?;
+        // 复用 TwitterClient 的带鉴权 client（与 Python 参考一致：媒体下载也携带 auth cookie / bearer），
+        // 对 twimg CDN 更稳；reqwest::Client 内部为 Arc，clone 代价极低。
+        let http_client = client.client().clone();
 
         // 启动实时速度监控
         let speed_monitor = self.start_speed_monitor(app.clone(), total, downloaded.clone(), skip_count.clone(), failed.clone(), processed.clone());

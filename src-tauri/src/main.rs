@@ -98,11 +98,22 @@ async fn start_download(app: AppHandle, state: State<'_, AppState>, config: AppC
 }
 
 #[tauri::command]
-async fn cancel_download(state: State<'_, AppState>) -> Result<(), String> {
+async fn cancel_download(app: AppHandle, state: State<'_, AppState>) -> Result<(), String> {
     let lock = state.downloader.lock().unwrap();
     if let Some(ref mgr) = *lock {
         mgr.cancel();
     }
+    drop(lock);
+    // 立即给出取消反馈，避免用户点击后“毫无反应”的错觉
+    let now = Local::now().format("%H:%M:%S").to_string();
+    let _ = app.emit_all(
+        "download-log",
+        LogPayload {
+            level: "warn".into(),
+            message: ">>> 收到取消指令，正在中断队列…".into(),
+            timestamp: now,
+        },
+    );
     Ok(())
 }
 

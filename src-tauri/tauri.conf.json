@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "TwitterDownloader",
-    "version": "1.0.3"
+    "version": "1.0.4"
   },
   "tauri": {
     "allowlist": {
@@ -36,10 +36,10 @@
     "windows": [
       {
         "title": "X媒体下载器",
-        "width": 900,
-        "height": 940,
-        "minWidth": 780,
-        "minHeight": 760,
+        "width": 880,
+        "height": 840,
+        "minWidth": 760,
+        "minHeight": 700,
         "resizable": true
       }
     ]

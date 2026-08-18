@@ -27,7 +27,7 @@ impl TwitterClient {
 
         let client = Client::builder()
             .default_headers(headers)
-            .timeout(std::time::Duration::from_secs(15))
+            .timeout(std::time::Duration::from_secs(30))
             .build()
             .map_err(|e| e.to_string())?;
 
@@ -54,6 +54,9 @@ impl TwitterClient {
         let body = read_body(resp).await?;
         let json: Value = serde_json::from_str(&body)
             .map_err(|e| format!("JSON 解析错误: {e} | 响应片段: {}", &body.chars().take(200).collect::<String>()))?;
+        if let Some(msg) = get_graphql_error(&json) {
+            return Err(format!("Twitter 返回错误: {msg}"));
+        }
         let user_res = &json["data"]["user"]["result"];
         let legacy = &user_res["legacy"];
 
@@ -90,6 +93,9 @@ impl TwitterClient {
         let body = read_body(resp).await?;
         let json: Value = serde_json::from_str(&body)
             .map_err(|e| format!("解析媒体数据错误: {e} | 响应片段: {}", &body.chars().take(200).collect::<String>()))?;
+        if let Some(msg) = get_graphql_error(&json) {
+            return Err(format!("Twitter 返回错误: {msg}"));
+        }
         let instructions = json["data"]["user"]["result"]["timeline_v2"]["timeline"]["instructions"]
             .as_array()
             .or_else(|| json["data"]["user"]["result"]["timeline"]["timeline"]["instructions"].as_array())
@@ -134,6 +140,11 @@ impl TwitterClient {
         }
 
         Ok((items, next_cursor))
+    }
+
+    /// 暴露底层 reqwest client，供 downloader 复用（携带完整鉴权头）。
+    pub fn client(&self) -> &Client {
+        &self.client
     }
 
     fn extract_medias(entry: &Value, items: &mut Vec<MediaItem>, _cursor: &mut Option<String>, time_range: Option<(NaiveDate, NaiveDate)>) {
@@ -205,8 +216,10 @@ impl TwitterClient {
                     }
                 } else if let Some(img_url) = m["media_url_https"].as_str() {
                     let media_id = extract_media_id(img_url, "jpg");
+                    // 只存原始 URL，'?name=orig' 由 downloader 在下载时才拼接，
+                    // 避免与参考实现不一致导致 "...jpg?name=orig?name=orig" 双参数。
                     items.push(MediaItem {
-                        url: format!("{img_url}?name=orig"),
+                        url: img_url.to_string(),
                         filename: format!("{timestr}-img"),
                         ext: "jpg".into(),
                         media_id,
@@ -251,6 +264,16 @@ async fn read_body(resp: reqwest::Response) -> Result<String, String> {
     }
     Ok(body)
 }
+
+/// 提取 GraphQL 响应中的首个 errors 消息（若有），便于快速定位风控/限流/账号问题。
+fn get_graphql_error(json: &Value) -> Option<String> {
+    json.get("errors")
+        .and_then(|e| e.as_array())
+        .and_then(|arr| arr.first())
+        .and_then(|err| err.get("message").and_then(|m| m.as_str()))
+        .map(|s| s.to_string())
+}
+
 fn parse_tweet_date(created_at: Option<&Value>) -> Option<NaiveDate> {
     let s = created_at?.as_str()?;
     let dt = DateTime::parse_from_str(s, "%a %b %d %H:%M:%S %z %Y").ok()?;
