@@ -8,7 +8,7 @@ use chrono::{Datelike, Local};
 use downloader::DownloadManager;
 use std::path::PathBuf;
 use std::sync::Mutex;
-use tauri::{api::shell, AppHandle, Manager, State};
+use tauri::{AppHandle, Manager, State};
 use types::{AppConfig, LogPayload};
 
 const RECENT_USER_ID_LIMIT: usize = 7;
@@ -107,15 +107,34 @@ async fn cancel_download(state: State<'_, AppState>) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn open_download_dir(app: AppHandle, config: AppConfig) -> Result<(), String> {
+async fn open_download_dir(_app: AppHandle, config: AppConfig) -> Result<(), String> {
     let screen_name = config.user_id.trim_start_matches('@');
     let dir = PathBuf::from(&config.save_path).join(screen_name);
     // 目录不存在则尝试打开父目录
     let open_path = if dir.exists() { dir } else { PathBuf::from(&config.save_path) };
     let path_str = open_path.to_string_lossy().to_string();
 
-    let scope = app.shell_scope();
-    shell::open(&scope, &path_str, None).map_err(|e| format!("打开目录失败: {e}"))?;
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("explorer")
+            .arg(&path_str)
+            .spawn()
+            .map_err(|e| format!("打开目录失败: {e}"))?;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(&path_str)
+            .spawn()
+            .map_err(|e| format!("打开目录失败: {e}"))?;
+    }
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(&path_str)
+            .spawn()
+            .map_err(|e| format!("打开目录失败: {e}"))?;
+    }
     Ok(())
 }
 

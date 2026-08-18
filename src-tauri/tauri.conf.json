@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "TwitterDownloader",
-    "version": "1.0.2"
+    "version": "1.0.3"
   },
   "tauri": {
     "allowlist": {
@@ -19,10 +19,6 @@
       },
       "fs": {
         "all": true
-      },
-      "shell": {
-        "all": false,
-        "open": true
       }
     },
     "bundle": {
@@ -39,9 +35,11 @@
     },
     "windows": [
       {
-        "title": "Twitter Media Downloader Pro",
-        "width": 860,
-        "height": 720,
+        "title": "X媒体下载器",
+        "width": 900,
+        "height": 940,
+        "minWidth": 780,
+        "minHeight": 760,
         "resizable": true
       }
     ]

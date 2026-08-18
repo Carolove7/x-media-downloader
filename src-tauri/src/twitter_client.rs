@@ -46,12 +46,14 @@ impl TwitterClient {
             self.screen_name
         );
 
-        let resp = self.client.get(&url).send().await.map_err(|e| format!("请求失败: {e}"))?;
+        let resp = self.client.get(&quote_url(&url)).send().await.map_err(|e| format!("请求失败: {e}"))?;
         if resp.status() == 401 {
             return Err("Cookie 无效或已过期，请重新填写 auth_token 和 ct0".into());
         }
 
-        let json: Value = resp.json().await.map_err(|e| format!("JSON 解析错误: {e}"))?;
+        let body = read_body(resp).await?;
+        let json: Value = serde_json::from_str(&body)
+            .map_err(|e| format!("JSON 解析错误: {e} | 响应片段: {}", &body.chars().take(200).collect::<String>()))?;
         let user_res = &json["data"]["user"]["result"];
         let legacy = &user_res["legacy"];
 
@@ -80,12 +82,14 @@ impl TwitterClient {
             rest_id, cursor_query
         );
 
-        let resp = self.client.get(&url).send().await.map_err(|e| format!("获取媒体列表失败: {e}"))?;
+        let resp = self.client.get(&quote_url(&url)).send().await.map_err(|e| format!("获取媒体列表失败: {e}"))?;
         if resp.status() == 429 {
             return Err("已触发 Twitter API 请求速率限制 (429 Rate Limit)，请稍后再试".into());
         }
 
-        let json: Value = resp.json().await.map_err(|e| format!("解析媒体数据错误: {e}"))?;
+        let body = read_body(resp).await?;
+        let json: Value = serde_json::from_str(&body)
+            .map_err(|e| format!("解析媒体数据错误: {e} | 响应片段: {}", &body.chars().take(200).collect::<String>()))?;
         let instructions = json["data"]["user"]["result"]["timeline_v2"]["timeline"]["instructions"]
             .as_array()
             .or_else(|| json["data"]["user"]["result"]["timeline"]["timeline"]["instructions"].as_array())
@@ -225,7 +229,28 @@ fn parse_time_range(s: &str) -> Option<(NaiveDate, NaiveDate)> {
     Some((start, end))
 }
 
-/// 从推文 created_at 字段（如 "Wed Jun 10 12:00:00 +0000 2020"）解析 UTC 日期。
+/// 对 GraphQL 查询中的花括号做 URL 编码，避免被服务端当作非法 URL 拒绝。
+fn quote_url(url: &str) -> String {
+    url.replace('{', "%7B").replace('}', "%7D")
+}
+
+/// 读取响应体并做健壮化校验：空响应 / 非 JSON 响应都会给出可诊断的错误。
+async fn read_body(resp: reqwest::Response) -> Result<String, String> {
+    let status = resp.status();
+    let body = resp.text().await.map_err(|e| format!("读取响应失败: {e}"))?;
+    if body.trim().is_empty() {
+        return Err(format!(
+            "Twitter 返回空响应 (HTTP {status})，可能是网络被拦截、账号被风控或 Cookie 已失效"
+        ));
+    }
+    if !body.trim_start().starts_with('{') && !body.trim_start().starts_with('[') {
+        return Err(format!(
+            "Twitter 返回了非 JSON 响应 (HTTP {status})，片段: {}",
+            &body.chars().take(200).collect::<String>()
+        ));
+    }
+    Ok(body)
+}
 fn parse_tweet_date(created_at: Option<&Value>) -> Option<NaiveDate> {
     let s = created_at?.as_str()?;
     let dt = DateTime::parse_from_str(s, "%a %b %d %H:%M:%S %z %Y").ok()?;
