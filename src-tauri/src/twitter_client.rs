@@ -50,14 +50,19 @@ impl TwitterClient {
             self.screen_name
         );
 
+        let quoted = quote_url(&url);
+        eprintln!("[DIAG] fetch_user_info URL length: {}, quoted length: {}", url.len(), quoted.len());
+
         let resp = tokio::time::timeout(
             std::time::Duration::from_secs(20),
-            self.client.get(&quote_url(&url)).send(),
+            self.client.get(&quoted).send(),
         )
         .await
         .map_err(|_| "请求超时（20 秒未响应），请检查网络或代理设置".to_string())?
         .map_err(|e| format!("请求失败: {e}"))?;
-        if resp.status() == 401 {
+        let status = resp.status();
+        eprintln!("[DIAG] fetch_user_info HTTP {}", status);
+        if status == 401 {
             return Err("Cookie 无效或已过期，请重新填写 auth_token 和 ct0".into());
         }
 
@@ -95,14 +100,19 @@ impl TwitterClient {
             rest_id, cursor_query
         );
 
+        let quoted = quote_url(&url);
+        eprintln!("[DIAG] fetch_media_page URL length: {}, cursor: {}", url.len(), cursor.is_some());
+
         let resp = tokio::time::timeout(
             std::time::Duration::from_secs(20),
-            self.client.get(&quote_url(&url)).send(),
+            self.client.get(&quoted).send(),
         )
         .await
         .map_err(|_| "请求超时（20 秒未响应），请检查网络或代理设置".to_string())?
         .map_err(|e| format!("获取媒体列表失败: {e}"))?;
-        if resp.status() == 429 {
+        let status = resp.status();
+        eprintln!("[DIAG] fetch_media_page HTTP {}", status);
+        if status == 429 {
             return Err("已触发 Twitter API 请求速率限制 (429 Rate Limit)，请稍后再试".into());
         }
 

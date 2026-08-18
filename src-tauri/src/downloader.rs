@@ -35,10 +35,18 @@ impl DownloadManager {
 
     pub async fn run(&self, app: AppHandle, config: AppConfig) -> Result<(), String> {
         let screen_name = config.user_id.trim_start_matches('@').to_string();
-        let client = TwitterClient::new(&config.auth_token, &config.ct0, &screen_name, &config.time_range())?;
+        eprintln!("[DIAG] === DownloadManager::run start for @{} ===", screen_name);
+
+        let client = match TwitterClient::new(&config.auth_token, &config.ct0, &screen_name, &config.time_range()) {
+            Ok(c) => { eprintln!("[DIAG] TwitterClient created OK"); c }
+            Err(e) => { eprintln!("[DIAG] TwitterClient create FAILED: {}", e); return Err(e); }
+        };
 
         self.log(&app, "info", &format!("正在连接 Twitter 并获取 @{} 元数据...", screen_name));
-        let user_info = client.fetch_user_info().await?;
+        let user_info = match client.fetch_user_info().await {
+            Ok(info) => { eprintln!("[DIAG] fetch_user_info OK: rest_id={}", info.rest_id); info }
+            Err(e) => { eprintln!("[DIAG] fetch_user_info FAILED: {}", e); return Err(e); }
+        };
         self.log(&app, "info", &format!("成功识别用户: {} (@{}) | 估算媒体数: {}", user_info.name, user_info.screen_name, user_info.media_count));
 
         let save_dir = PathBuf::from(&config.save_path).join(&user_info.screen_name);
@@ -52,7 +60,10 @@ impl DownloadManager {
         }
 
         // 2. 全局收集下载目标（跨页去重）
-        let (targets, skip_count) = self.collect_targets(&app, &client, &user_info, &mut seen_ids, &config.media_filter).await?;
+        let (targets, skip_count) = match self.collect_targets(&app, &client, &user_info, &mut seen_ids, &config.media_filter).await {
+            Ok(result) => { eprintln!("[DIAG] collect_targets OK: {} targets, {} skipped", result.0.len(), result.1); result }
+            Err(e) => { eprintln!("[DIAG] collect_targets FAILED: {}", e); return Err(e); }
+        };
         let skip_count = Arc::new(AtomicUsize::new(skip_count));
         let downloaded = Arc::new(AtomicUsize::new(0));
         let failed = Arc::new(AtomicUsize::new(0));
@@ -235,11 +246,18 @@ impl DownloadManager {
         total: usize,
         app: &AppHandle,
     ) -> Result<(), (u16, String)> {
+        eprintln!("[DIAG] download_once starting: {} -> {}", file_name, url);
+
         let resp = match client.get(url.clone()).send().await {
             Ok(r) => r,
-            Err(e) => return Err((0, format!("请求失败: {e}"))),
+            Err(e) => {
+                let err_msg = format!("请求失败: {e}");
+                eprintln!("[DIAG] download_once request error: {}", err_msg);
+                return Err((0, err_msg));
+            }
         };
         let status = resp.status().as_u16();
+        eprintln!("[DIAG] download_once HTTP {} for {}", status, file_name);
         if !resp.status().is_success() {
             return Err((status, format!("HTTP {status}")));
         }
@@ -281,6 +299,7 @@ impl DownloadManager {
 
         saved_bytes.fetch_add(file_bytes, Ordering::Relaxed);
         downloaded_cnt.fetch_add(1, Ordering::Relaxed);
+        eprintln!("[DIAG] download_once OK: {} ({} bytes)", file_name, file_bytes);
         Self::log_static(app, "success", &format!("[成功] {}", file_name));
         let p = processed_cnt.fetch_add(1, Ordering::Relaxed) + 1;
         Self::emit_progress_static(
