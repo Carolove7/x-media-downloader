@@ -1,0 +1,37 @@
+{
+  "build": {
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "",
+    "devPath": "../ui",
+    "distDir": "../ui"
+  },
+  "package": {
+    "productName": "TwitterDownloader",
+    "version": "1.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "dialog": {
+        "all": true,
+        "open": true
+      },
+      "fs": {
+        "all": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "targets": "all",
+      "identifier": "com.twitter.downloader"
+    },
+    "windows": [
+      {
+        "title": "Twitter Media Downloader Pro",
+        "width": 860,
+        "height": 720,
+        "resizable": true
+      }
+    ]
+  }
+}

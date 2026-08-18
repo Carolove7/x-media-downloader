@@ -1,0 +1,23 @@
+# Rust build artifacts
+/target/
+**/target/
+
+# Node
+node_modules/
+
+# Tauri build output
+/dist/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# WorkBuddy / local workspace files
+.workbuddy/

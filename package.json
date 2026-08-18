@@ -1,0 +1,11 @@
+{
+  "name": "x-media-downloader",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^1.5.0"
+  }
+}
