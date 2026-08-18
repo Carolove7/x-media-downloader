@@ -1,5 +1,5 @@
 use crate::twitter_client::TwitterClient;
-use crate::types::{AppConfig, LogPayload, MediaItem, ProgressPayload};
+use crate::types::{AppConfig, LogPayload, ProgressPayload};
 use chrono::Local;
 use futures_util::StreamExt;
 use reqwest::Client;

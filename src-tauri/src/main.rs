@@ -42,7 +42,7 @@ async fn save_config(config: AppConfig) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn start_download(app: AppHandle, state: State<'_', AppState>, config: AppConfig) -> Result<(), String> {
+async fn start_download(app: AppHandle, state: State<AppState>, config: AppConfig) -> Result<(), String> {
     let manager = DownloadManager::new();
     {
         let mut lock = state.downloader.lock().unwrap();
@@ -62,7 +62,7 @@ async fn start_download(app: AppHandle, state: State<'_', AppState>, config: App
 }
 
 #[tauri::command]
-async fn cancel_download(state: State<'_', AppState>) -> Result<(), String> {
+async fn cancel_download(state: State<AppState>) -> Result<(), String> {
     let lock = state.downloader.lock().unwrap();
     if let Some(ref mgr) = *lock {
         mgr.cancel();
