@@ -80,7 +80,7 @@ impl DownloadManager {
         let speed_monitor = self.start_speed_monitor(app.clone(), total, downloaded.clone(), skip_count.clone(), failed.clone(), processed.clone());
 
         let mut tasks = Vec::new();
-        for (idx, item) in targets.into_iter().enumerate() {
+        for item in targets {
             let sem = semaphore.clone();
             let client = http_client.clone();
             let dir = save_dir.clone();

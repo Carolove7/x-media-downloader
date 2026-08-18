@@ -4,11 +4,11 @@ mod downloader;
 mod twitter_client;
 mod types;
 
-use chrono::Local;
+use chrono::{Datelike, Local};
 use downloader::DownloadManager;
 use std::path::PathBuf;
 use std::sync::Mutex;
-use tauri::{api::shell, AppHandle, State};
+use tauri::{api::shell, AppHandle, Manager, State};
 use types::{AppConfig, LogPayload};
 
 const RECENT_USER_ID_LIMIT: usize = 7;
