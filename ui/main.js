@@ -343,6 +343,10 @@ listen("download-progress", (event) => {
 listen("download-log", (event) => {
   const { level, message, timestamp } = event.payload;
   appendLog(level, message, timestamp);
+  // 只有任务级日志（以 >>> 开头）才改变运行状态；单个文件的
+  // [成功]/[失败]/[跳过] 日志不改变按钮状态——否则下载中途成功
+  // 第一个文件就会提前恢复“开始”按钮并禁用“取消”，造成取消无反应。
+  if (!message.startsWith(">>>")) return;
   if (level === "success") {
     setFinishedState(false);
   } else if (level === "warn") {

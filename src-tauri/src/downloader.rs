@@ -1,4 +1,4 @@
-use crate::twitter_client::TwitterClient;
+use crate::twitter_client::{quote_url, TwitterClient};
 use crate::types::{AppConfig, LogPayload, MediaItem, ProgressPayload, UserInfo};
 use chrono::Local;
 use futures_util::StreamExt;
@@ -59,7 +59,7 @@ impl DownloadManager {
         let processed = Arc::new(AtomicUsize::new(0));
 
         if targets.is_empty() {
-            self.log(&app, "info", "未发现任何可下载的媒体。");
+            self.log(&app, "success", ">>> 完成：未发现可下载的新媒体（本地已存在或账号无媒体）");
             self.emit_done(&app, 0, 0, 0);
             return Ok(());
         }
@@ -116,8 +116,27 @@ impl DownloadManager {
                     return;
                 }
 
-                let req_url = if item.ext == "mp4" { item.url.clone() } else { format!("{}?name=orig", item.url) };
+                // 与 Python 参考版一致：下载 URL 也过 quote_url（花括号编码），
+                // 并预先 parse 成 reqwest::Url——Client::get 对非法 URL 会 panic，
+                // 提前解析可把这类问题转成可读的失败日志而不是任务静默消失。
+                let req_url = if item.ext == "mp4" {
+                    quote_url(&item.url)
+                } else {
+                    quote_url(&format!("{}?name=orig", item.url))
+                };
+                let parsed_url = match reqwest::Url::parse(&req_url) {
+                    Ok(u) => u,
+                    Err(e) => {
+                        failed_cnt.fetch_add(1, Ordering::Relaxed);
+                        Self::log_static(&app_handle, "error", &format!("[失败] {} URL 非法: {e}", file_name));
+                        let p = processed_cnt.fetch_add(1, Ordering::Relaxed) + 1;
+                        Self::emit_progress_static(&app_handle, p, total, downloaded_cnt.load(Ordering::Relaxed), skipped_cnt.load(Ordering::Relaxed), failed_cnt.load(Ordering::Relaxed), 0.0);
+                        return;
+                    }
+                };
+
                 let mut last_status = 0u16;
+                let mut last_err = String::new();
 
                 for attempt in 0..3 {
                     if cancel.is_cancelled() {
@@ -125,80 +144,52 @@ impl DownloadManager {
                         return;
                     }
 
-                    match client.get(&req_url).send().await {
-                        Ok(resp) => {
-                            last_status = resp.status().as_u16();
-                            if resp.status().is_success() {
-                                let mut stream = resp.bytes_stream();
-                                match File::create(&partial_path).await {
-                                    Ok(mut file) => {
-                                        let mut file_bytes: usize = 0;
-                                        let mut cancelled = false;
-                                        while let Some(chunk) = stream.next().await {
-                                            if cancel.is_cancelled() {
-                                                cancelled = true;
-                                                break;
-                                            }
-                                            match chunk {
-                                                Ok(bytes) => {
-                                                    if !bytes.is_empty() {
-                                                        if file.write_all(&bytes).await.is_err() {
-                                                            cancelled = true;
-                                                            break;
-                                                        }
-                                                        file_bytes += bytes.len();
-                                                        transfer_bytes.fetch_add(bytes.len(), Ordering::Relaxed);
-                                                    }
-                                                }
-                                                Err(_) => {
-                                                    cancelled = true;
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                        let _ = file.flush().await;
+                    // 单次尝试整体限时 600s：client 已无总超时，这里兜底防服务器挂起；
+                    // 大视频正常下载远小于该上限，不会被误杀（Python 版为读空闲 20s）。
+                    let outcome = tokio::time::timeout(
+                        std::time::Duration::from_secs(600),
+                        Self::download_once(
+                            &client,
+                            &parsed_url,
+                            &partial_path,
+                            &file_path,
+                            &file_name,
+                            &cancel,
+                            &transfer_bytes,
+                            &saved_bytes,
+                            &downloaded_cnt,
+                            &skipped_cnt,
+                            &failed_cnt,
+                            &processed_cnt,
+                            total,
+                            &app_handle,
+                        ),
+                    )
+                    .await;
 
-                                        if cancelled {
-                                            let _ = fs::remove_file(&partial_path).await;
-                                            if cancel.is_cancelled() {
-                                                return;
-                                            }
-                                            continue;
-                                        }
-
-                                        if let Err(e) = fs::rename(&partial_path, &file_path).await {
-                                            let _ = fs::remove_file(&partial_path).await;
-                                            Self::log_static(&app_handle, "error", &format!("[失败] {} 重命名失败: {}", file_name, e));
-                                            failed_cnt.fetch_add(1, Ordering::Relaxed);
-                                            let p = processed_cnt.fetch_add(1, Ordering::Relaxed) + 1;
-                                            Self::emit_progress_static(&app_handle, p, total, downloaded_cnt.load(Ordering::Relaxed), skipped_cnt.load(Ordering::Relaxed), failed_cnt.load(Ordering::Relaxed), 0.0);
-                                            return;
-                                        }
-
-                                        saved_bytes.fetch_add(file_bytes, Ordering::Relaxed);
-                                        downloaded_cnt.fetch_add(1, Ordering::Relaxed);
-                                        Self::log_static(&app_handle, "success", &format!("[成功] {}", file_name));
-                                        let p = processed_cnt.fetch_add(1, Ordering::Relaxed) + 1;
-                                        Self::emit_progress_static(&app_handle, p, total, downloaded_cnt.load(Ordering::Relaxed), skipped_cnt.load(Ordering::Relaxed), failed_cnt.load(Ordering::Relaxed), 0.0);
-                                        return;
-                                    }
-                                    Err(_) => break,
-                                }
-                            }
+                    match outcome {
+                        // 成功：计数、日志、进度均已在 download_once 内完成
+                        Ok(Ok(())) => return,
+                        Ok(Err((status, msg))) => {
+                            last_status = status;
+                            last_err = msg;
                         }
                         Err(_) => {
                             last_status = 0;
+                            last_err = "单个文件下载超时（超过 600 秒）".to_string();
                         }
                     }
+                    let _ = fs::remove_file(&partial_path).await;
 
                     if attempt < 2 && !cancel.is_cancelled() {
                         tokio::time::sleep(std::time::Duration::from_millis(800)).await;
                     }
                 }
 
+                // 3 次尝试均失败
                 let _ = fs::remove_file(&partial_path).await;
                 failed_cnt.fetch_add(1, Ordering::Relaxed);
-                Self::log_static(&app_handle, "error", &format!("[失败] {} HTTP {}", file_name, last_status));
+                Self::log_static(&app_handle, "error", &format!("[失败] {} HTTP {} {}", file_name, last_status, last_err));
                 let p = processed_cnt.fetch_add(1, Ordering::Relaxed) + 1;
                 Self::emit_progress_static(&app_handle, p, total, downloaded_cnt.load(Ordering::Relaxed), skipped_cnt.load(Ordering::Relaxed), failed_cnt.load(Ordering::Relaxed), 0.0);
             }));
@@ -222,6 +213,85 @@ impl DownloadManager {
             self.log(&app, "success", &format!(">>> 完成：新下载 {} · 跳过 {} · 失败 {} · {:.2}MB", down, skip, fail, mb));
         }
 
+        Ok(())
+    }
+
+    /// 单个文件的一次下载尝试：发送请求 + 流式写盘 + 原子重命名。
+    /// 成功返回 Ok(())（计数/日志/进度已在此内完成）；
+    /// 失败返回 Err((HTTP 状态码, 可读原因))，供外层重试。
+    async fn download_once(
+        client: &reqwest::Client,
+        url: &reqwest::Url,
+        partial_path: &PathBuf,
+        file_path: &PathBuf,
+        file_name: &str,
+        cancel: &CancellationToken,
+        transfer_bytes: &Arc<AtomicUsize>,
+        saved_bytes: &Arc<AtomicUsize>,
+        downloaded_cnt: &Arc<AtomicUsize>,
+        skipped_cnt: &Arc<AtomicUsize>,
+        failed_cnt: &Arc<AtomicUsize>,
+        processed_cnt: &Arc<AtomicUsize>,
+        total: usize,
+        app: &AppHandle,
+    ) -> Result<(), (u16, String)> {
+        let resp = match client.get(url.clone()).send().await {
+            Ok(r) => r,
+            Err(e) => return Err((0, format!("请求失败: {e}"))),
+        };
+        let status = resp.status().as_u16();
+        if !resp.status().is_success() {
+            return Err((status, format!("HTTP {status}")));
+        }
+
+        let mut stream = resp.bytes_stream();
+        let mut file = match File::create(partial_path).await {
+            Ok(f) => f,
+            Err(e) => return Err((status, format!("创建临时文件失败: {e}"))),
+        };
+        let mut file_bytes: usize = 0;
+        while let Some(chunk) = stream.next().await {
+            if cancel.is_cancelled() {
+                let _ = fs::remove_file(partial_path).await;
+                return Err((status, "用户已取消".into()));
+            }
+            match chunk {
+                Ok(bytes) => {
+                    if !bytes.is_empty() {
+                        if let Err(e) = file.write_all(&bytes).await {
+                            let _ = fs::remove_file(partial_path).await;
+                            return Err((status, format!("写入失败: {e}")));
+                        }
+                        file_bytes += bytes.len();
+                        transfer_bytes.fetch_add(bytes.len(), Ordering::Relaxed);
+                    }
+                }
+                Err(e) => {
+                    let _ = fs::remove_file(partial_path).await;
+                    return Err((status, format!("读取流中断: {e}")));
+                }
+            }
+        }
+        let _ = file.flush().await;
+
+        if let Err(e) = fs::rename(partial_path, file_path).await {
+            let _ = fs::remove_file(partial_path).await;
+            return Err((status, format!("重命名失败: {e}")));
+        }
+
+        saved_bytes.fetch_add(file_bytes, Ordering::Relaxed);
+        downloaded_cnt.fetch_add(1, Ordering::Relaxed);
+        Self::log_static(app, "success", &format!("[成功] {}", file_name));
+        let p = processed_cnt.fetch_add(1, Ordering::Relaxed) + 1;
+        Self::emit_progress_static(
+            app,
+            p,
+            total,
+            downloaded_cnt.load(Ordering::Relaxed),
+            skipped_cnt.load(Ordering::Relaxed),
+            failed_cnt.load(Ordering::Relaxed),
+            0.0,
+        );
         Ok(())
     }
 

@@ -25,9 +25,13 @@ impl TwitterClient {
         headers.insert(COOKIE, HeaderValue::from_str(&cookie_str).map_err(|e| e.to_string())?);
         headers.insert(REFERER, HeaderValue::from_str(&format!("https://twitter.com/{screen_name}")).map_err(|e| e.to_string())?);
 
+        // 注意：不设置 reqwest 的 .timeout()（它是"整个请求含 body 读取"的总超时），
+        // 否则下载大图/视频时超过 30 秒必然被掐断（Python 参考版 httpx 的 timeout
+        // 只是"读空闲超时"，不限制总时长）。这里只限制连接建立时间，防挂起。
+        // 请求级超时由调用方用 tokio::time::timeout 包裹（GraphQL 20s / 下载 600s）。
         let client = Client::builder()
             .default_headers(headers)
-            .timeout(std::time::Duration::from_secs(30))
+            .connect_timeout(std::time::Duration::from_secs(15))
             .build()
             .map_err(|e| e.to_string())?;
 
@@ -46,7 +50,13 @@ impl TwitterClient {
             self.screen_name
         );
 
-        let resp = self.client.get(&quote_url(&url)).send().await.map_err(|e| format!("请求失败: {e}"))?;
+        let resp = tokio::time::timeout(
+            std::time::Duration::from_secs(20),
+            self.client.get(&quote_url(&url)).send(),
+        )
+        .await
+        .map_err(|_| "请求超时（20 秒未响应），请检查网络或代理设置".to_string())?
+        .map_err(|e| format!("请求失败: {e}"))?;
         if resp.status() == 401 {
             return Err("Cookie 无效或已过期，请重新填写 auth_token 和 ct0".into());
         }
@@ -85,7 +95,13 @@ impl TwitterClient {
             rest_id, cursor_query
         );
 
-        let resp = self.client.get(&quote_url(&url)).send().await.map_err(|e| format!("获取媒体列表失败: {e}"))?;
+        let resp = tokio::time::timeout(
+            std::time::Duration::from_secs(20),
+            self.client.get(&quote_url(&url)).send(),
+        )
+        .await
+        .map_err(|_| "请求超时（20 秒未响应），请检查网络或代理设置".to_string())?
+        .map_err(|e| format!("获取媒体列表失败: {e}"))?;
         if resp.status() == 429 {
             return Err("已触发 Twitter API 请求速率限制 (429 Rate Limit)，请稍后再试".into());
         }
@@ -242,8 +258,9 @@ fn parse_time_range(s: &str) -> Option<(NaiveDate, NaiveDate)> {
     Some((start, end))
 }
 
-/// 对 GraphQL 查询中的花括号做 URL 编码，避免被服务端当作非法 URL 拒绝。
-fn quote_url(url: &str) -> String {
+/// 对 URL 中的花括号做百分号编码（GraphQL 查询与媒体下载 URL 均需使用）。
+/// Python 参考版对每个请求 URL（含下载 URL）都做同样的处理。
+pub fn quote_url(url: &str) -> String {
     url.replace('{', "%7B").replace('}', "%7D")
 }
 
