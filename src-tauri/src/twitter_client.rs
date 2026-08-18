@@ -12,6 +12,8 @@ pub struct TwitterClient {
     client: Client,
     screen_name: String,
     time_range: Option<(NaiveDate, NaiveDate)>,
+    /// 实际使用的网络模式描述（直连 / 环境变量代理 / 系统代理），用于日志展示。
+    pub proxy_desc: String,
 }
 
 impl TwitterClient {
@@ -29,11 +31,20 @@ impl TwitterClient {
         // 否则下载大图/视频时超过 30 秒必然被掐断（Python 参考版 httpx 的 timeout
         // 只是"读空闲超时"，不限制总时长）。这里只限制连接建立时间，防挂起。
         // 请求级超时由调用方用 tokio::time::timeout 包裹（GraphQL 20s / 下载 600s）。
-        let client = Client::builder()
+        //
+        // 代理：reqwest 默认只读环境变量代理，不读 Windows 系统代理（WinINET 注册表）。
+        // 大陆网络环境下 twitter.com 直连不可达，必须显式读取系统代理才能工作。
+        let mut builder = Client::builder()
             .default_headers(headers)
-            .connect_timeout(std::time::Duration::from_secs(15))
-            .build()
-            .map_err(|e| e.to_string())?;
+            .connect_timeout(std::time::Duration::from_secs(15));
+        let proxy_desc = match detect_system_proxy() {
+            Some((proxy, desc)) => {
+                builder = builder.proxy(proxy);
+                desc
+            }
+            None => "直连（未检测到代理）".to_string(),
+        };
+        let client = builder.build().map_err(|e| e.to_string())?;
 
         let range = parse_time_range(time_range);
 
@@ -41,6 +52,7 @@ impl TwitterClient {
             client,
             screen_name: screen_name.trim_start_matches('@').to_string(),
             time_range: range,
+            proxy_desc,
         })
     }
 
@@ -272,6 +284,94 @@ fn parse_time_range(s: &str) -> Option<(NaiveDate, NaiveDate)> {
 /// Python 参考版对每个请求 URL（含下载 URL）都做同样的处理。
 pub fn quote_url(url: &str) -> String {
     url.replace('{', "%7B").replace('}', "%7D")
+}
+
+/// 检测应使用的代理。
+/// 优先级：环境变量（reqwest 默认已自动使用，直接返回 None 让其生效）→
+/// Windows 系统代理（WinINET 注册表，浏览器"系统代理"设置）→ 无。
+/// 返回 (代理, 描述)。
+fn detect_system_proxy() -> Option<(reqwest::Proxy, String)> {
+    const ENV_KEYS: [&str; 6] = [
+        "http_proxy", "HTTP_PROXY", "https_proxy", "HTTPS_PROXY", "all_proxy", "ALL_PROXY",
+    ];
+    let env_set = ENV_KEYS
+        .iter()
+        .any(|k| std::env::var(k).map(|v| !v.trim().is_empty()).unwrap_or(false));
+    if env_set {
+        // reqwest 已自动使用环境变量代理，无需显式设置
+        return None;
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        if let Some(server) = read_wininet_proxy_server() {
+            let (scheme, addr) = parse_proxy_server(&server);
+            let url = format!("{scheme}://{addr}");
+            match reqwest::Proxy::all(&url) {
+                Ok(p) => return Some((p, format!("系统代理 {url}"))),
+                Err(_) => return None,
+            }
+        }
+    }
+
+    None
+}
+
+/// 读取 Windows 注册表中的 WinINET 代理设置（即浏览器/系统"使用代理服务器"配置）。
+#[cfg(target_os = "windows")]
+fn read_wininet_proxy_server() -> Option<String> {
+    use winreg::enums::{HKEY_CURRENT_USER, KEY_READ};
+    use winreg::RegKey;
+
+    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+    let key = hkcu
+        .open_subkey_with_flags(
+            r"Software\Microsoft\Windows\CurrentVersion\Internet Settings",
+            KEY_READ,
+        )
+        .ok()?;
+    let enabled: u32 = key.get_value("ProxyEnable").ok()?;
+    if enabled == 0 {
+        return None;
+    }
+    let server: String = key.get_value("ProxyServer").ok()?;
+    if server.trim().is_empty() {
+        return None;
+    }
+    Some(server)
+}
+
+/// 解析 ProxyServer 的两种格式：
+/// - "127.0.0.1:10808"（所有协议共用）
+/// - "http=127.0.0.1:10809;https=127.0.0.1:10809;socks=127.0.0.1:10808"（按协议）
+/// 返回 (scheme, host:port)。
+fn parse_proxy_server(server: &str) -> (&'static str, String) {
+    if server.contains('=') {
+        let mut https = None;
+        let mut http = None;
+        let mut socks = None;
+        for part in server.split(';') {
+            if let Some((k, v)) = part.split_once('=') {
+                let v = v.trim().to_string();
+                if v.is_empty() {
+                    continue;
+                }
+                match k.trim().to_ascii_lowercase().as_str() {
+                    "https" => https = Some(v),
+                    "http" => http = Some(v),
+                    "socks" | "socks5" => socks = Some(v),
+                    _ => {}
+                }
+            }
+        }
+        if let Some(v) = https.or(http) {
+            return ("http", v);
+        }
+        if let Some(v) = socks {
+            return ("socks5", v);
+        }
+    }
+    ("http", server.trim().to_string())
 }
 
 /// 读取响应体并做健壮化校验：空响应 / 非 JSON 响应都会给出可诊断的错误。

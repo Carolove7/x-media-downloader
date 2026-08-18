@@ -23,6 +23,19 @@ fn config_path() -> PathBuf {
         .join("twitter_downloader_config.json")
 }
 
+/// 日志落盘：GUI 模式下 eprintln 完全不可见，写文件便于事后诊断。
+/// 文件位置：%APPDATA%\twitter_downloader_log.txt
+pub fn log_to_file(level: &str, msg: &str) {
+    use std::io::Write;
+    let path = dirs::config_dir()
+        .unwrap_or_default()
+        .join("twitter_downloader_log.txt");
+    if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(&path) {
+        let now = Local::now().format("%Y-%m-%d %H:%M:%S");
+        let _ = writeln!(f, "[{now}] [{level}] {msg}");
+    }
+}
+
 #[tauri::command]
 async fn load_config() -> Result<AppConfig, String> {
     let path = config_path();
@@ -75,19 +88,23 @@ async fn start_download(app: AppHandle, state: State<'_, AppState>, config: AppC
     tokio::spawn(async move {
         if let Err(e) = mgr.run(app.clone(), config).await {
             let now = Local::now().format("%H:%M:%S").to_string();
+            let msg = format!(">>> 任务执行出错，已终止: {e}");
+            log_to_file("error", &msg);
             let _ = app.emit_all(
                 "download-log",
                 LogPayload {
                     level: "error".into(),
-                    message: format!(">>> 任务执行出错，已终止: {e}"),
+                    message: msg,
                     timestamp: now.clone(),
                 },
             );
+            let hint = ">>> 请检查 Cookie 是否有效、网络能否访问 twitter.com".to_string();
+            log_to_file("error", &hint);
             let _ = app.emit_all(
                 "download-log",
                 LogPayload {
                     level: "error".into(),
-                    message: ">>> 请检查 Cookie 是否有效、网络能否访问 twitter.com".into(),
+                    message: hint,
                     timestamp: now,
                 },
             );

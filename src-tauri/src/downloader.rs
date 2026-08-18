@@ -41,11 +41,22 @@ impl DownloadManager {
             Ok(c) => { eprintln!("[DIAG] TwitterClient created OK"); c }
             Err(e) => { eprintln!("[DIAG] TwitterClient create FAILED: {}", e); return Err(e); }
         };
+        // 网络模式对用户可见：直连还是代理（大陆网络必须走代理才能访问 twitter.com）
+        crate::log_to_file("info", &format!("[DIAG] 网络模式: {}", client.proxy_desc));
+        self.log(&app, "info", &format!("网络: {} | 目标: @{}", client.proxy_desc, screen_name));
 
         self.log(&app, "info", &format!("正在连接 Twitter 并获取 @{} 元数据...", screen_name));
         let user_info = match client.fetch_user_info().await {
-            Ok(info) => { eprintln!("[DIAG] fetch_user_info OK: rest_id={}", info.rest_id); info }
-            Err(e) => { eprintln!("[DIAG] fetch_user_info FAILED: {}", e); return Err(e); }
+            Ok(info) => {
+                eprintln!("[DIAG] fetch_user_info OK: rest_id={}", info.rest_id);
+                crate::log_to_file("info", &format!("[DIAG] fetch_user_info OK: rest_id={} media_count={}", info.rest_id, info.media_count));
+                info
+            }
+            Err(e) => {
+                eprintln!("[DIAG] fetch_user_info FAILED: {}", e);
+                crate::log_to_file("error", &format!("[DIAG] fetch_user_info FAILED: {e}"));
+                return Err(e);
+            }
         };
         self.log(&app, "info", &format!("成功识别用户: {} (@{}) | 估算媒体数: {}", user_info.name, user_info.screen_name, user_info.media_count));
 
@@ -61,8 +72,16 @@ impl DownloadManager {
 
         // 2. 全局收集下载目标（跨页去重）
         let (targets, skip_count) = match self.collect_targets(&app, &client, &user_info, &mut seen_ids, &config.media_filter).await {
-            Ok(result) => { eprintln!("[DIAG] collect_targets OK: {} targets, {} skipped", result.0.len(), result.1); result }
-            Err(e) => { eprintln!("[DIAG] collect_targets FAILED: {}", e); return Err(e); }
+            Ok(result) => {
+                eprintln!("[DIAG] collect_targets OK: {} targets, {} skipped", result.0.len(), result.1);
+                crate::log_to_file("info", &format!("[DIAG] collect_targets OK: {} targets, {} skipped", result.0.len(), result.1));
+                result
+            }
+            Err(e) => {
+                eprintln!("[DIAG] collect_targets FAILED: {}", e);
+                crate::log_to_file("error", &format!("[DIAG] collect_targets FAILED: {e}"));
+                return Err(e);
+            }
         };
         let skip_count = Arc::new(AtomicUsize::new(skip_count));
         let downloaded = Arc::new(AtomicUsize::new(0));
@@ -253,12 +272,14 @@ impl DownloadManager {
             Err(e) => {
                 let err_msg = format!("请求失败: {e}");
                 eprintln!("[DIAG] download_once request error: {}", err_msg);
+                crate::log_to_file("error", &format!("[DIAG] download_once 请求失败 {} : {}", file_name, err_msg));
                 return Err((0, err_msg));
             }
         };
         let status = resp.status().as_u16();
         eprintln!("[DIAG] download_once HTTP {} for {}", status, file_name);
         if !resp.status().is_success() {
+            crate::log_to_file("error", &format!("[DIAG] download_once HTTP {status} : {file_name}"));
             return Err((status, format!("HTTP {status}")));
         }
 
@@ -456,6 +477,7 @@ impl DownloadManager {
     }
 
     fn log_static(app: &AppHandle, level: &str, msg: &str) {
+        crate::log_to_file(level, msg);
         let _ = app.emit_all("download-log", LogPayload {
             level: level.to_string(),
             message: msg.to_string(),
