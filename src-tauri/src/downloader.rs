@@ -2,7 +2,6 @@ use crate::twitter_client::{quote_url, TwitterClient};
 use crate::types::{AppConfig, LogPayload, MediaItem, ProgressPayload, UserInfo};
 use chrono::Local;
 use futures_util::StreamExt;
-use reqwest::Client;
 use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};

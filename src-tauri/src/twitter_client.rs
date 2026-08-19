@@ -167,7 +167,7 @@ impl TwitterClient {
             // 单 entry 形态兜底（'entry' in instr）
             let entries: Vec<&Value> = if let Some(arr) = instr["entries"].as_array() {
                 arr.iter().collect()
-            } else if instr.get("entry").is_object() {
+            } else if instr.get("entry").map_or(false, |v| v.is_object()) {
                 vec![&instr["entry"]]
             } else {
                 Vec::new()
@@ -204,7 +204,7 @@ impl TwitterClient {
         // 第二遍：从每个 item 提取媒体（对齐参考版 item.get('item', item).get('itemContent')）
         let mut items: Vec<MediaItem> = Vec::new();
         for item in &collected {
-            let item_content = if item.get("item").is_object() {
+            let item_content = if item.get("item").map_or(false, |v| v.is_object()) {
                 &item["item"]["itemContent"]
             } else {
                 &item["itemContent"]
@@ -216,7 +216,7 @@ impl TwitterClient {
             if tweet_result.is_null() {
                 continue;
             }
-            let tweet = if tweet_result.get("tweet").is_object() {
+            let tweet = if tweet_result.get("tweet").map_or(false, |v| v.is_object()) {
                 &tweet_result["tweet"]
             } else {
                 tweet_result
