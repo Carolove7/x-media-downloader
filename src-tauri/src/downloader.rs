@@ -289,26 +289,31 @@ impl DownloadManager {
             Err(e) => return Err((status, format!("创建临时文件失败: {e}"))),
         };
         let mut file_bytes: usize = 0;
-        while let Some(chunk) = stream.next().await {
+        loop {
             if cancel.is_cancelled() {
                 let _ = fs::remove_file(partial_path).await;
                 return Err((status, "用户已取消".into()));
             }
-            match chunk {
-                Ok(bytes) => {
-                    if !bytes.is_empty() {
-                        if let Err(e) = file.write_all(&bytes).await {
-                            let _ = fs::remove_file(partial_path).await;
-                            return Err((status, format!("写入失败: {e}")));
-                        }
-                        file_bytes += bytes.len();
-                        transfer_bytes.fetch_add(bytes.len(), Ordering::Relaxed);
-                    }
-                }
-                Err(e) => {
+            // 单个 chunk 读取空闲超过 30s 即视为代理中断，失败以便外层重试（而非永久挂起）
+            let chunk = match tokio::time::timeout(std::time::Duration::from_secs(30), stream.next()).await {
+                Ok(Some(Ok(bytes))) => bytes,
+                Ok(Some(Err(e))) => {
                     let _ = fs::remove_file(partial_path).await;
                     return Err((status, format!("读取流中断: {e}")));
                 }
+                Ok(None) => break, // 流正常结束
+                Err(_) => {
+                    let _ = fs::remove_file(partial_path).await;
+                    return Err((status, "读取超时（30秒无新数据），代理可能中断，将重试".into()));
+                }
+            };
+            if !chunk.is_empty() {
+                if let Err(e) = file.write_all(&chunk).await {
+                    let _ = fs::remove_file(partial_path).await;
+                    return Err((status, format!("写入失败: {e}")));
+                }
+                file_bytes += chunk.len();
+                transfer_bytes.fetch_add(chunk.len(), Ordering::Relaxed);
             }
         }
         let _ = file.flush().await;
@@ -368,12 +373,46 @@ impl DownloadManager {
         let mut seen_this_run = HashSet::new();
         let max_pages = 500;
 
+        let mut page_idx = 0usize;
         for _ in 0..max_pages {
             if self.cancel_token.is_cancelled() {
                 break;
             }
 
-            let (media_items, next_cursor) = client.fetch_media_page(&user_info.rest_id, cursor.as_deref()).await?;
+            // 对齐参考版：单页请求失败重试 3 次（代理偶发截断大响应体，重试即可恢复）
+            let mut page: Option<(Vec<MediaItem>, Option<String>)> = None;
+            let mut last_err = String::new();
+            for attempt in 0..3 {
+                match client.fetch_media_page(&user_info.rest_id, cursor.as_deref()).await {
+                    Ok(p) => {
+                        page = Some(p);
+                        break;
+                    }
+                    Err(e) => {
+                        last_err = e;
+                        if attempt < 2 && !self.cancel_token.is_cancelled() {
+                            tokio::time::sleep(std::time::Duration::from_millis(1500)).await;
+                        }
+                    }
+                }
+            }
+            let (media_items, next_cursor) = match page {
+                Some(p) => p,
+                None => {
+                    let msg = format!("获取媒体列表失败（已重试 3 次）: {last_err}");
+                    crate::log_to_file("error", &format!("[DIAG] collect_targets FAILED: {msg}"));
+                    return Err(msg);
+                }
+            };
+            page_idx += 1;
+            crate::log_to_file(
+                "info",
+                &format!(
+                    "[DIAG] 第{page_idx}页 提取 {} 个 (累计队列 {})",
+                    media_items.len(),
+                    targets.len() + skip_count
+                ),
+            );
             if media_items.is_empty() {
                 break;
             }

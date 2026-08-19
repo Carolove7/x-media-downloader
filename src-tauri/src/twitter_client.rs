@@ -56,6 +56,37 @@ impl TwitterClient {
         })
     }
 
+    /// 发送 GraphQL 请求并把整个响应体读回为字符串。
+    /// 关键：`.send()` 与 `read_body`（读 body 流）**都**包在超时里——
+    /// 否则代理偶发截断大响应体后，reqwest 会一直等待更多数据，任务永久挂起，
+    /// 表现为 UI 卡在"正在下载…"。超时后由调用方重试（对齐参考版 retry=3）。
+    async fn send_and_read(&self, url: &str, secs: u64) -> Result<String, String> {
+        let resp = match tokio::time::timeout(
+            std::time::Duration::from_secs(secs),
+            self.client.get(url).send(),
+        )
+        .await
+        {
+            Ok(Ok(r)) => r,
+            Ok(Err(e)) => return Err(format!("请求失败: {e}")),
+            Err(_) => return Err(format!("请求超时（{secs} 秒未响应），请检查网络或代理设置")),
+        };
+        let status = resp.status();
+        if status == 401 {
+            return Err("Cookie 无效或已过期，请重新填写 auth_token 和 ct0".into());
+        }
+        if status == 429 {
+            return Err("已触发 Twitter API 请求速率限制 (429 Rate Limit)，请稍后再试".into());
+        }
+        match tokio::time::timeout(std::time::Duration::from_secs(secs), read_body(resp)).await {
+            Ok(Ok(b)) => Ok(b),
+            Ok(Err(e)) => Err(e),
+            Err(_) => Err(format!(
+                "读取响应超时（{secs} 秒），可能是网络/代理不稳定导致传输中断，将在重试后恢复"
+            )),
+        }
+    }
+
     pub async fn fetch_user_info(&self) -> Result<UserInfo, String> {
         let url = format!(
             r#"https://twitter.com/i/api/graphql/xc8f1g7BYqr6VTzTbvNlGw/UserByScreenName?variables={{"screen_name":"{}","withSafetyModeUserFields":false}}&features={{"hidden_profile_likes_enabled":false,"hidden_profile_subscriptions_enabled":false,"responsive_web_graphql_exclude_directive_enabled":true,"verified_phone_label_enabled":false,"subscriptions_verification_info_verified_since_enabled":true,"highlights_tweets_tab_ui_enabled":true,"creator_subscriptions_tweet_preview_api_enabled":true,"responsive_web_graphql_skip_user_profile_image_extensions_enabled":false,"responsive_web_graphql_timeline_navigation_enabled":true}}&fieldToggles={{"withAuxiliaryUserLabels":false}}"#,
@@ -64,21 +95,14 @@ impl TwitterClient {
 
         let quoted = quote_url(&url);
         eprintln!("[DIAG] fetch_user_info URL length: {}, quoted length: {}", url.len(), quoted.len());
-
-        let resp = tokio::time::timeout(
-            std::time::Duration::from_secs(20),
-            self.client.get(&quoted).send(),
-        )
-        .await
-        .map_err(|_| "请求超时（20 秒未响应），请检查网络或代理设置".to_string())?
-        .map_err(|e| format!("请求失败: {e}"))?;
-        let status = resp.status();
-        eprintln!("[DIAG] fetch_user_info HTTP {}", status);
-        if status == 401 {
-            return Err("Cookie 无效或已过期，请重新填写 auth_token 和 ct0".into());
-        }
-
-        let body = read_body(resp).await?;
+        let body = match self.send_and_read(&quoted, 20).await {
+            Ok(b) => b,
+            Err(e) => {
+                crate::log_to_file("error", &format!("[DIAG] fetch_user_info FAILED: {e}"));
+                return Err(e);
+            }
+        };
+        crate::log_to_file("info", "[DIAG] fetch_user_info OK");
         let json: Value = serde_json::from_str(&body)
             .map_err(|e| format!("JSON 解析错误: {e} | 响应片段: {}", &body.chars().take(200).collect::<String>()))?;
         if let Some(msg) = get_graphql_error(&json) {
@@ -114,64 +138,143 @@ impl TwitterClient {
 
         let quoted = quote_url(&url);
         eprintln!("[DIAG] fetch_media_page URL length: {}, cursor: {}", url.len(), cursor.is_some());
-
-        let resp = tokio::time::timeout(
-            std::time::Duration::from_secs(20),
-            self.client.get(&quoted).send(),
-        )
-        .await
-        .map_err(|_| "请求超时（20 秒未响应），请检查网络或代理设置".to_string())?
-        .map_err(|e| format!("获取媒体列表失败: {e}"))?;
-        let status = resp.status();
-        eprintln!("[DIAG] fetch_media_page HTTP {}", status);
-        if status == 429 {
-            return Err("已触发 Twitter API 请求速率限制 (429 Rate Limit)，请稍后再试".into());
-        }
-
-        let body = read_body(resp).await?;
+        let body = match self.send_and_read(&quoted, 20).await {
+            Ok(b) => b,
+            Err(e) => {
+                crate::log_to_file("error", &format!("[DIAG] fetch_media_page FAILED: {e}"));
+                return Err(e);
+            }
+        };
+        crate::log_to_file("info", &format!("[DIAG] fetch_media_page 收到响应 {}B", body.len()));
         let json: Value = serde_json::from_str(&body)
             .map_err(|e| format!("解析媒体数据错误: {e} | 响应片段: {}", &body.chars().take(200).collect::<String>()))?;
         if let Some(msg) = get_graphql_error(&json) {
             return Err(format!("Twitter 返回错误: {msg}"));
         }
-        let instructions = json["data"]["user"]["result"]["timeline_v2"]["timeline"]["instructions"]
-            .as_array()
-            .or_else(|| json["data"]["user"]["result"]["timeline"]["timeline"]["instructions"].as_array())
+
+        let timeline = json["data"]["user"]["result"]["timeline_v2"]["timeline"]
+            .as_object()
+            .or_else(|| json["data"]["user"]["result"]["timeline"]["timeline"].as_object());
+        let instructions = timeline
+            .and_then(|t| t.get("instructions"))
+            .and_then(|i| i.as_array())
             .ok_or("未找到时间线数据")?;
 
-        let mut items = Vec::new();
-        let mut next_cursor = None;
-
+        // 第一遍：按参考版逻辑展平收集所有 item 对象，并抽取 next_cursor
+        let mut collected: Vec<Value> = Vec::new();
+        let mut next_cursor: Option<String> = None;
         for instr in instructions {
-            // 某些响应把条目放在 instruction.moduleItems 里
-            if let Some(module_items) = instr["moduleItems"].as_array() {
-                for item in module_items {
-                    Self::extract_medias(item, &mut items, &mut next_cursor, self.time_range);
+            // 单 entry 形态兜底（'entry' in instr）
+            let entries: Vec<&Value> = if let Some(arr) = instr["entries"].as_array() {
+                arr.iter().collect()
+            } else if instr.get("entry").is_object() {
+                vec![&instr["entry"]]
+            } else {
+                Vec::new()
+            };
+            for entry in entries {
+                let entry_id = entry["entryId"].as_str().unwrap_or("");
+                if entry_id.contains("bottom") || entry_id.contains("cursor-bottom") {
+                    next_cursor = entry["content"]["value"]
+                        .as_str()
+                        .or_else(|| entry["content"]["cursor"]["value"].as_str())
+                        .map(|s| s.to_string());
+                    continue;
+                }
+                let content = &entry["content"];
+                if content["items"].is_array() {
+                    for it in content["items"].as_array().unwrap() {
+                        collected.push(it.clone());
+                    }
+                } else if content["moduleItems"].is_array() {
+                    for it in content["moduleItems"].as_array().unwrap() {
+                        collected.push(it.clone());
+                    }
+                } else if content.get("itemContent").is_some() {
+                    collected.push(entry.clone());
+                }
+            }
+            if instr["moduleItems"].is_array() {
+                for it in instr["moduleItems"].as_array().unwrap() {
+                    collected.push(it.clone());
+                }
+            }
+        }
+
+        // 第二遍：从每个 item 提取媒体（对齐参考版 item.get('item', item).get('itemContent')）
+        let mut items: Vec<MediaItem> = Vec::new();
+        for item in &collected {
+            let item_content = if item.get("item").is_object() {
+                &item["item"]["itemContent"]
+            } else {
+                &item["itemContent"]
+            };
+            if item_content.is_null() || item_content["tweet_results"].is_null() {
+                continue;
+            }
+            let tweet_result = &item_content["tweet_results"]["result"];
+            if tweet_result.is_null() {
+                continue;
+            }
+            let tweet = if tweet_result.get("tweet").is_object() {
+                &tweet_result["tweet"]
+            } else {
+                tweet_result
+            };
+            let legacy = &tweet["legacy"];
+            if legacy.is_null() {
+                continue;
+            }
+
+            // 时间范围过滤（按 UTC 日期比较）
+            if let Some((start, end)) = self.time_range {
+                let in_range = parse_tweet_date(legacy.get("created_at"))
+                    .map(|date| date >= start && date <= end)
+                    .unwrap_or(false);
+                if !in_range {
+                    continue;
                 }
             }
 
-            if let Some(entries) = instr["entries"].as_array() {
-                for entry in entries {
-                    let entry_id = entry["entryId"].as_str().unwrap_or("");
-                    if entry_id.contains("bottom") || entry_id.contains("cursor-bottom") {
-                        next_cursor = entry["content"]["value"]
-                            .as_str()
-                            .or_else(|| entry["content"]["cursor"]["value"].as_str())
-                            .map(|s| s.to_string());
-                        continue;
-                    }
+            let timestr = parse_tweet_date(legacy.get("created_at"))
+                .map(|date| date.format("%Y-%m-%d %H-%M").to_string())
+                .unwrap_or_else(|| chrono::Local::now().format("%Y-%m-%d %H-%M").to_string());
 
-                    // 处理 content.items / content.moduleItems / content.itemContent 三种形态
-                    if let Some(nested) = entry["content"]["items"].as_array() {
-                        for item in nested {
-                            Self::extract_medias(item, &mut items, &mut next_cursor, self.time_range);
+            let media_arr = legacy["extended_entities"]["media"]
+                .as_array()
+                .or_else(|| legacy["entities"]["media"].as_array());
+
+            if let Some(media_list) = media_arr {
+                for m in media_list {
+                    if let Some(variants) = m["video_info"]["variants"].as_array() {
+                        let mut max_bitrate: i64 = -1;
+                        let mut best_url = String::new();
+                        for v in variants {
+                            let bitrate = v["bitrate"].as_i64().unwrap_or(-1);
+                            if let Some(u) = v["url"].as_str() {
+                                if bitrate > max_bitrate {
+                                    max_bitrate = bitrate;
+                                    best_url = u.to_string();
+                                }
+                            }
                         }
-                    } else if let Some(nested) = entry["content"]["moduleItems"].as_array() {
-                        for item in nested {
-                            Self::extract_medias(item, &mut items, &mut next_cursor, self.time_range);
+                        if !best_url.is_empty() {
+                            let media_id = extract_media_id(&best_url, "mp4");
+                            items.push(MediaItem {
+                                url: best_url,
+                                filename: format!("{timestr}-vid"),
+                                ext: "mp4".into(),
+                                media_id,
+                            });
                         }
-                    } else {
-                        Self::extract_medias(entry, &mut items, &mut next_cursor, self.time_range);
+                    } else if let Some(img_url) = m["media_url_https"].as_str() {
+                        let media_id = extract_media_id(img_url, "jpg");
+                        items.push(MediaItem {
+                            url: img_url.to_string(),
+                            filename: format!("{timestr}-img"),
+                            ext: "jpg".into(),
+                            media_id,
+                        });
                     }
                 }
             }
@@ -185,87 +288,6 @@ impl TwitterClient {
         &self.client
     }
 
-    fn extract_medias(entry: &Value, items: &mut Vec<MediaItem>, _cursor: &mut Option<String>, time_range: Option<(NaiveDate, NaiveDate)>) {
-        let entry_id = entry["entryId"].as_str().unwrap_or("");
-        if entry_id.contains("bottom") || entry_id.contains("cursor-bottom") {
-            return;
-        }
-
-        // 先尝试 entry.item.itemContent，再尝试 entry.itemContent
-        let item_content = entry["item"]["itemContent"]
-            .as_object()
-            .map(|_| &entry["item"]["itemContent"])
-            .unwrap_or(&entry["itemContent"]);
-
-        if item_content.is_null() || item_content["tweet_results"].is_null() {
-            return;
-        }
-
-        let tweet_result = match item_content["tweet_results"]["result"].as_object() {
-            Some(o) => o,
-            None => return,
-        };
-        let tweet = tweet_result.get("tweet").and_then(|v| v.as_object()).unwrap_or(tweet_result);
-        let legacy = &tweet["legacy"];
-        if legacy.is_null() {
-            return;
-        }
-
-        // 时间范围过滤（按 UTC 日期比较）
-        if let Some((start, end)) = time_range {
-            let in_range = parse_tweet_date(legacy.get("created_at"))
-                .map(|date| date >= start && date <= end)
-                .unwrap_or(false);
-            if !in_range {
-                return;
-            }
-        }
-
-        let timestr = parse_tweet_date(legacy.get("created_at"))
-            .map(|date| date.format("%Y-%m-%d %H-%M").to_string())
-            .unwrap_or_else(|| chrono::Local::now().format("%Y-%m-%d %H-%M").to_string());
-
-        let media_arr = legacy["extended_entities"]["media"]
-            .as_array()
-            .or_else(|| legacy["entities"]["media"].as_array());
-
-        if let Some(media_list) = media_arr {
-            for m in media_list {
-                if let Some(variants) = m["video_info"]["variants"].as_array() {
-                    let mut max_bitrate: i64 = -1;
-                    let mut best_url = String::new();
-                    for v in variants {
-                        let bitrate = v["bitrate"].as_i64().unwrap_or(-1);
-                        if let Some(u) = v["url"].as_str() {
-                            if bitrate > max_bitrate {
-                                max_bitrate = bitrate;
-                                best_url = u.to_string();
-                            }
-                        }
-                    }
-                    if !best_url.is_empty() {
-                        let media_id = extract_media_id(&best_url, "mp4");
-                        items.push(MediaItem {
-                            url: best_url,
-                            filename: format!("{timestr}-vid"),
-                            ext: "mp4".into(),
-                            media_id,
-                        });
-                    }
-                } else if let Some(img_url) = m["media_url_https"].as_str() {
-                    let media_id = extract_media_id(img_url, "jpg");
-                    // 只存原始 URL，'?name=orig' 由 downloader 在下载时才拼接，
-                    // 避免与参考实现不一致导致 "...jpg?name=orig?name=orig" 双参数。
-                    items.push(MediaItem {
-                        url: img_url.to_string(),
-                        filename: format!("{timestr}-img"),
-                        ext: "jpg".into(),
-                        media_id,
-                    });
-                }
-            }
-        }
-    }
 }
 
 /// 解析时间范围字符串 "YYYY-MM-DD:YYYY-MM-DD"，返回 (start, end) 本地日期。
