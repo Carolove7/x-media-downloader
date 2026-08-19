@@ -145,33 +145,37 @@ impl DownloadManager {
                     return;
                 }
 
-                // 与 Python 参考版一致：下载 URL 也过 quote_url（花括号编码），
-                // 并预先 parse 成 reqwest::Url——Client::get 对非法 URL 会 panic，
-                // 提前解析可把这类问题转成可读的失败日志而不是任务静默消失。
-                let req_url = if item.ext == "mp4" {
-                    quote_url(&item.url)
-                } else {
+                // 对齐参考版 down_save：图片优先原图 (?name=orig)，若 404 则回退 4096x4096；视频走直链
+                let is_jpg = item.ext == "jpg";
+                let url_orig = if is_jpg {
                     quote_url(&format!("{}?name=orig", item.url))
+                } else {
+                    quote_url(&item.url)
                 };
-                let parsed_url = match reqwest::Url::parse(&req_url) {
-                    Ok(u) => u,
-                    Err(e) => {
-                        failed_cnt.fetch_add(1, Ordering::Relaxed);
-                        Self::log_static(&app_handle, "error", &format!("[失败] {} URL 非法: {e}", file_name));
-                        let p = processed_cnt.fetch_add(1, Ordering::Relaxed) + 1;
-                        Self::emit_progress_static(&app_handle, p, total, downloaded_cnt.load(Ordering::Relaxed), skipped_cnt.load(Ordering::Relaxed), failed_cnt.load(Ordering::Relaxed), 0.0);
-                        return;
-                    }
-                };
+                let url_fallback = quote_url(&format!("{}?format=jpg&name=4096x4096", item.url));
+                let mut use_fallback = false;
 
                 let mut last_status = 0u16;
                 let mut last_err = String::new();
 
-                for attempt in 0..3 {
+                // 对齐参考版：单文件最多重试 50 次（代理偶发中断即可恢复）
+                for attempt in 0..50 {
                     if cancel.is_cancelled() {
                         let _ = fs::remove_file(&partial_path).await;
                         return;
                     }
+
+                    let effective = if is_jpg && use_fallback { &url_fallback } else { &url_orig };
+                    let parsed_url = match reqwest::Url::parse(effective) {
+                        Ok(u) => u,
+                        Err(e) => {
+                            failed_cnt.fetch_add(1, Ordering::Relaxed);
+                            Self::log_static(&app_handle, "error", &format!("[失败] {} URL 非法: {e}", file_name));
+                            let p = processed_cnt.fetch_add(1, Ordering::Relaxed) + 1;
+                            Self::emit_progress_static(&app_handle, p, total, downloaded_cnt.load(Ordering::Relaxed), skipped_cnt.load(Ordering::Relaxed), failed_cnt.load(Ordering::Relaxed), 0.0);
+                            return;
+                        }
+                    };
 
                     // 单次尝试整体限时 600s：client 已无总超时，这里兜底防服务器挂起；
                     // 大视频正常下载远小于该上限，不会被误杀（Python 版为读空闲 20s）。
@@ -202,6 +206,10 @@ impl DownloadManager {
                         Ok(Err((status, msg))) => {
                             last_status = status;
                             last_err = msg;
+                            // 原图 404 时回退到 4096x4096 尺寸（对齐参考版 name=orig→4096x4096）
+                            if is_jpg && status == 404 {
+                                use_fallback = true;
+                            }
                         }
                         Err(_) => {
                             last_status = 0;
@@ -210,7 +218,7 @@ impl DownloadManager {
                     }
                     let _ = fs::remove_file(&partial_path).await;
 
-                    if attempt < 2 && !cancel.is_cancelled() {
+                    if attempt < 49 && !cancel.is_cancelled() {
                         tokio::time::sleep(std::time::Duration::from_millis(800)).await;
                     }
                 }
@@ -293,8 +301,8 @@ impl DownloadManager {
                 let _ = fs::remove_file(partial_path).await;
                 return Err((status, "用户已取消".into()));
             }
-            // 单个 chunk 读取空闲超过 30s 即视为代理中断，失败以便外层重试（而非永久挂起）
-            let chunk = match tokio::time::timeout(std::time::Duration::from_secs(30), stream.next()).await {
+            // 单个 chunk 读取空闲超过 60s 即视为代理中断，失败以便外层重试（而非永久挂起）
+            let chunk = match tokio::time::timeout(std::time::Duration::from_secs(60), stream.next()).await {
                 Ok(Some(Ok(bytes))) => bytes,
                 Ok(Some(Err(e))) => {
                     let _ = fs::remove_file(partial_path).await;
@@ -303,7 +311,7 @@ impl DownloadManager {
                 Ok(None) => break, // 流正常结束
                 Err(_) => {
                     let _ = fs::remove_file(partial_path).await;
-                    return Err((status, "读取超时（30秒无新数据），代理可能中断，将重试".into()));
+                    return Err((status, "读取超时（60秒无新数据），代理可能中断，将重试".into()));
                 }
             };
             if !chunk.is_empty() {

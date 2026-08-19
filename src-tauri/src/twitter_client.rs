@@ -152,72 +152,82 @@ impl TwitterClient {
             return Err(format!("Twitter 返回错误: {msg}"));
         }
 
-        let timeline = json["data"]["user"]["result"]["timeline_v2"]["timeline"]
-            .as_object()
-            .or_else(|| json["data"]["user"]["result"]["timeline"]["timeline"].as_object());
-        let instructions = timeline
-            .and_then(|t| t.get("instructions"))
-            .and_then(|i| i.as_array())
-            .ok_or("未找到时间线数据")?;
+        // —— 以下解析严格对齐 Python 参考版 main.py 的 UserMedia 默认模式 ——
+        let instructions = json["data"]["user"]["result"]["timeline_v2"]["timeline"]["instructions"]
+            .as_array()
+            .ok_or("未找到时间线 instructions")?;
 
-        // 第一遍：按参考版逻辑展平收集所有 item 对象，并抽取 next_cursor
-        let mut collected: Vec<Value> = Vec::new();
+        let is_first = cursor.is_none();
+        let mut content_items: Vec<Value> = Vec::new();
         let mut next_cursor: Option<String> = None;
-        for instr in instructions {
-            // 单 entry 形态兜底（'entry' in instr）
-            let entries: Vec<&Value> = if let Some(arr) = instr["entries"].as_array() {
-                arr.iter().collect()
-            } else if instr.get("entry").map_or(false, |v| v.is_object()) {
-                vec![&instr["entry"]]
-            } else {
-                Vec::new()
-            };
-            for entry in entries {
-                let entry_id = entry["entryId"].as_str().unwrap_or("");
-                if entry_id.contains("bottom") || entry_id.contains("cursor-bottom") {
-                    next_cursor = entry["content"]["value"]
-                        .as_str()
-                        .or_else(|| entry["content"]["cursor"]["value"].as_str())
-                        .map(|s| s.to_string());
-                    continue;
-                }
-                let content = &entry["content"];
-                if content["items"].is_array() {
-                    for it in content["items"].as_array().unwrap() {
-                        collected.push(it.clone());
+
+        if is_first {
+            // 第一页：instructions 最后一个 instruction 的 entries[0].content.items
+            if let Some(last_instr) = instructions.last() {
+                if let Some(entries) = last_instr["entries"].as_array() {
+                    if let Some(first_entry) = entries.first() {
+                        if let Some(items) = first_entry["content"]["items"].as_array() {
+                            content_items = items.iter().cloned().collect();
+                        }
                     }
-                } else if content["moduleItems"].is_array() {
-                    for it in content["moduleItems"].as_array().unwrap() {
-                        collected.push(it.clone());
+                    // 第一页的下一页 cursor 在 instructions[-1].entries 的 bottom 里
+                    for e in entries {
+                        let eid = e["entryId"].as_str().unwrap_or("");
+                        if eid.contains("bottom") {
+                            next_cursor = e["content"]["value"]
+                                .as_str()
+                                .or_else(|| e["content"]["cursor"]["value"].as_str())
+                                .map(|s| s.to_string());
+                        }
                     }
-                } else if content.get("itemContent").is_some() {
-                    collected.push(entry.clone());
                 }
             }
-            if instr["moduleItems"].is_array() {
-                for it in instr["moduleItems"].as_array().unwrap() {
-                    collected.push(it.clone());
+        } else if let Some(first_instr) = instructions.first() {
+            // 后续页：instructions[0].moduleItems
+            if let Some(mod_items) = first_instr["moduleItems"].as_array() {
+                content_items = mod_items.iter().cloned().collect();
+                for i in mod_items {
+                    let eid = i["entryId"].as_str().unwrap_or("");
+                    if eid.contains("bottom") {
+                        next_cursor = i["content"]["value"]
+                            .as_str()
+                            .or_else(|| i["content"]["cursor"]["value"].as_str())
+                            .map(|s| s.to_string());
+                    }
                 }
+            } else {
+                // 后续页无 moduleItems = 全部媒体已拉取完毕
+                return Ok((Vec::new(), None));
             }
         }
 
-        // 第二遍：从每个 item 提取媒体（对齐参考版 item.get('item', item).get('itemContent')）
+        // 对齐参考版 get_url_from_content（x_label='item'）：逐项提取媒体并记录 cursor-bottom
         let mut items: Vec<MediaItem> = Vec::new();
-        for item in &collected {
-            let item_content = if item.get("item").map_or(false, |v| v.is_object()) {
-                &item["item"]["itemContent"]
-            } else {
-                &item["itemContent"]
-            };
-            if item_content.is_null() || item_content["tweet_results"].is_null() {
+        for i in &content_items {
+            let entry_id = i["entryId"].as_str().unwrap_or("");
+            if entry_id.contains("promoted-tweet") {
                 continue;
             }
-            let tweet_result = &item_content["tweet_results"]["result"];
+            if entry_id.contains("cursor-bottom") || entry_id.contains("bottom") {
+                next_cursor = i["content"]["value"]
+                    .as_str()
+                    .or_else(|| i["content"]["cursor"]["value"].as_str())
+                    .map(|s| s.to_string());
+                continue;
+            }
+
+            // 取 tweet_result：普通推文走 i['item']['itemContent']，对话线走 item.items[0]
+            let item_content = i["item"]["itemContent"].clone();
+            let tweet_result = if entry_id.contains("profile-conversation") {
+                i["item"]["items"][0]["item"]["itemContent"]["tweet_results"]["result"].clone()
+            } else {
+                item_content["tweet_results"]["result"].clone()
+            };
             if tweet_result.is_null() {
                 continue;
             }
             let tweet = if tweet_result.get("tweet").map_or(false, |v| v.is_object()) {
-                &tweet_result["tweet"]
+                tweet_result["tweet"].clone()
             } else {
                 tweet_result
             };
@@ -247,21 +257,21 @@ impl TwitterClient {
             if let Some(media_list) = media_arr {
                 for m in media_list {
                     if let Some(variants) = m["video_info"]["variants"].as_array() {
+                        let mut best_url: Option<String> = None;
                         let mut max_bitrate: i64 = -1;
-                        let mut best_url = String::new();
                         for v in variants {
                             let bitrate = v["bitrate"].as_i64().unwrap_or(-1);
                             if let Some(u) = v["url"].as_str() {
                                 if bitrate > max_bitrate {
                                     max_bitrate = bitrate;
-                                    best_url = u.to_string();
+                                    best_url = Some(u.to_string());
                                 }
                             }
                         }
-                        if !best_url.is_empty() {
-                            let media_id = extract_media_id(&best_url, "mp4");
+                        if let Some(url) = best_url {
+                            let media_id = extract_media_id(&url, "mp4");
                             items.push(MediaItem {
-                                url: best_url,
+                                url,
                                 filename: format!("{timestr}-vid"),
                                 ext: "mp4".into(),
                                 media_id,
