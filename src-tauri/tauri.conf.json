@@ -1,4 +1,4 @@
-{
+﻿{
   "build": {
     "beforeDevCommand": "",
     "beforeBuildCommand": "",
@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "TwitterDownloader",
-    "version": "1.0.12"
+    "version": "1.0.13"
   },
   "tauri": {
     "allowlist": {
