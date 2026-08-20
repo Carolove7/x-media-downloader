@@ -1,4 +1,4 @@
-﻿name: Build and Release EXE
+name: Build and Release EXE
 
 on:
   workflow_dispatch:
@@ -26,11 +26,14 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Set UTF-8 console encoding
+        run: chcp 65001
+
       - name: Install dependencies
         run: npm install
 
       - name: Build and Release
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
