@@ -1,4 +1,4 @@
-use crate::twitter_client::{quote_url, TwitterClient};
+use crate::twitter_client::TwitterClient;
 use crate::types::{AppConfig, LogPayload, MediaItem, ProgressPayload, UserInfo};
 use chrono::Local;
 use futures_util::StreamExt;

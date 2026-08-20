@@ -807,3 +807,7 @@ fn extract_media_id(url: &str, ext: &str) -> String {
     base.hash(&mut hasher);
     format!("{:x}", hasher.finish())[..12].to_string()
 }
+
+pub fn quote_url(url: &str) -> String {
+    url.replace('{', "%7B").replace('}', "%7D")
+}
