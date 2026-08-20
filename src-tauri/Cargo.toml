@@ -1,6 +1,6 @@
 [package]
 name = "twitter-media-downloader"
-version = "1.0.11"
+version = "1.0.12"
 edition = "2021"
 
 [build-dependencies]
@@ -23,5 +23,5 @@ winreg = "0.52"
 
 [features]
 # 生产构建 / 未在 tauri.conf.json 指定 dev server 时由 Tauri CLI 启用
-# 该 feature 必须转发给 tauri crate 的 custom-protocol
+# �?feature 必须转发�?tauri crate �?custom-protocol
 custom-protocol = ["tauri/custom-protocol"]

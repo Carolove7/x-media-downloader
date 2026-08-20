@@ -8,8 +8,6 @@ pub struct AppConfig {
     pub save_path: String,
     pub concurrency: Option<usize>,
     #[serde(default)]
-    pub proxy: Option<String>,
-    #[serde(default)]
     pub recent_user_ids: Vec<String>,
     #[serde(default = "default_media_filter")]
     pub media_filter: String,

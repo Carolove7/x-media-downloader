@@ -41,15 +41,10 @@ impl DownloadManager {
             &config.ct0,
             &screen_name,
             &config.time_range(),
-            config.proxy.as_deref(),
         ) {
             Ok(c) => { eprintln!("[DIAG] TwitterClient created OK"); c }
             Err(e) => { eprintln!("[DIAG] TwitterClient create FAILED: {}", e); return Err(e); }
         };
-        // 网络模式对用户可见：直连还是代理（大陆网络必须走代理才能访问 twitter.com）
-        crate::log_to_file("info", &format!("[DIAG] 网络模式: {}", client.proxy_desc));
-        self.log(&app, "info", &format!("网络: {} | 目标: @{}", client.proxy_desc, screen_name));
-
         self.log(&app, "info", &format!("正在连接 Twitter 并获取 @{} 元数据...", screen_name));
         let user_info = match client.fetch_user_info().await {
             Ok(info) => {
@@ -106,7 +101,7 @@ impl DownloadManager {
         // 3. 并发下载
         let concurrency = config.concurrency.unwrap_or(8).clamp(1, 32);
         let semaphore = Arc::new(Semaphore::new(concurrency));
-        // 使用媒体专用 Client（不带 GraphQL 鉴权头，防止 CDN 节点 400 校验拦截）
+        // 与 Python 参考版一致：媒体下载复用同一个带鉴权头的 client
         let http_client = client.media_client().clone();
 
         // 启动实时速度监控
@@ -150,39 +145,31 @@ impl DownloadManager {
                     return;
                 }
 
-                // 图片优先原图 (?name=orig)，若 404 则回退 4096x4096 / large；视频走直链
+                // 与 Python 一致：图片追加 ?name=orig；视频走原始直链
                 let is_jpg = item.ext == "jpg";
-                let url_orig = if is_jpg {
-                    if item.url.contains('?') {
-                        format!("{}&name=orig", item.url)
-                    } else {
-                        format!("{}?name=orig", item.url)
-                    }
-                } else {
-                    item.url.clone()
-                };
-                let url_fallback = if is_jpg {
-                    if item.url.contains('?') {
-                        format!("{}&name=4096x4096", item.url)
-                    } else {
-                        format!("{}?name=4096x4096", item.url)
-                    }
+                let req_url = if is_jpg {
+                    format!("{}?name=orig", item.url)
                 } else {
                     item.url.clone()
                 };
                 let mut use_fallback = false;
+                let url_fallback = if is_jpg {
+                    format!("{}?name=large", item.url)
+                } else {
+                    item.url.clone()
+                };
 
                 let mut last_status = 0u16;
                 let mut last_err = String::new();
 
-                // 对齐参考版：单文件最多重试 50 次（代理偶发中断即可恢复）
-                for attempt in 0..50 {
+                // 与 Python 一致：每个文件最多重试 3 次
+                for attempt in 0..3 {
                     if cancel.is_cancelled() {
                         let _ = fs::remove_file(&partial_path).await;
                         return;
                     }
 
-                    let effective = if is_jpg && use_fallback { &url_fallback } else { &url_orig };
+                    let effective = if is_jpg && use_fallback { &url_fallback } else { &req_url };
                     let parsed_url = match reqwest::Url::parse(effective) {
                         Ok(u) => u,
                         Err(e) => {
@@ -235,8 +222,8 @@ impl DownloadManager {
                     }
                     let _ = fs::remove_file(&partial_path).await;
 
-                    if attempt < 49 && !cancel.is_cancelled() {
-                        tokio::time::sleep(std::time::Duration::from_millis(800)).await;
+                    if attempt < 2 && !cancel.is_cancelled() {
+                        tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
                     }
                 }
 

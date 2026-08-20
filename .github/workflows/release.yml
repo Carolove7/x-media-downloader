@@ -15,7 +15,7 @@ jobs:
       contents: write
 
     steps:
-      - name: 检出代码
+      - name: 检出代�?
         uses: actions/checkout@v4
 
       - name: 安装 Node.js
@@ -23,26 +23,26 @@ jobs:
         with:
           node-version: 20
 
-      - name: 安装 Rust 工具链
+      - name: 安装 Rust 工具�?
         uses: dtolnay/rust-toolchain@stable
 
       - name: 安装 CLI 依赖
         run: npm install
 
-      - name: 编译 Tauri 并发布 Release
+      - name: 编译 Tauri 并发�?Release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: v1.0.11
-          releaseName: "X Media Downloader v1.0.11"
+          tagName: v1.0.12
+          releaseName: "X Media Downloader v1.0.12"
           releaseBody: |
-            ## X / Twitter Media Downloader v1.0.11 修复版
+            ## X / Twitter Media Downloader v1.0.12 修复�?
 
             ### 📦 核心修复与改进：
-            - **域名与协议适配**：全面升级至 `x.com` GraphQL 协议，补充完整鉴权头与现代浏览器指纹，解决跨域重定向导致的 401 鉴权丢失。
-            - **端点候选池与动态嗅探**：更新失效 Query ID，内置多候选容灾池（支持 UserMedia + UserTweets 双通道抓取），并在失败时自动从 x.com 前端资源嗅探最新接口。
-            - **时间线解析器重构**：全面兼容 `TimelineAddEntries`、置顶推文、推文网格、对话线等复杂层级结构与 `Bottom` 深度游标。
-            - **下载管道隔离**：采用独立媒体下载客户端避免 CDN 拦截，支持自定义代理与系统代理自动检测。
+            - **域名与协议适配**：全面升级至 `x.com` GraphQL 协议，补充完整鉴权头与现代浏览器指纹，解决跨域重定向导致�?401 鉴权丢失�?
+            - **端点候选池与动态嗅�?*：更新失�?Query ID，内置多候选容灾池（支�?UserMedia + UserTweets 双通道抓取），并在失败时自动从 x.com 前端资源嗅探最新接口�?
+            - **时间线解析器重构**：全面兼�?`TimelineAddEntries`、置顶推文、推文网格、对话线等复杂层级结构与 `Bottom` 深度游标�?
+            - **下载管道隔离**：采用独立媒体下载客户端避免 CDN 拦截，支持自定义代理与系统代理自动检测�?
           releaseDraft: false
           prerelease: false
