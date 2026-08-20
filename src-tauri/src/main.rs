@@ -90,7 +90,7 @@ async fn start_download(app: AppHandle, state: State<'_, AppState>, config: AppC
             let now = Local::now().format("%H:%M:%S").to_string();
             let msg = format!(">>> 任务执行出错，已终止: {e}");
             log_to_file("error", &msg);
-            let _ = app.emit_all(
+            let _ = app.emit(
                 "download-log",
                 LogPayload {
                     level: "error".into(),
@@ -100,7 +100,7 @@ async fn start_download(app: AppHandle, state: State<'_, AppState>, config: AppC
             );
             let hint = ">>> 请检查 Cookie 是否有效、网络能否访问 twitter.com".to_string();
             log_to_file("error", &hint);
-            let _ = app.emit_all(
+            let _ = app.emit(
                 "download-log",
                 LogPayload {
                     level: "error".into(),
@@ -123,7 +123,7 @@ async fn cancel_download(app: AppHandle, state: State<'_, AppState>) -> Result<(
     drop(lock);
     // 立即给出取消反馈，避免用户点击后“毫无反应”的错觉
     let now = Local::now().format("%H:%M:%S").to_string();
-    let _ = app.emit_all(
+    let _ = app.emit(
         "download-log",
         LogPayload {
             level: "warn".into(),
@@ -187,6 +187,19 @@ fn default_config() -> AppConfig {
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .setup(|app| {
+            let window = app.get_webview_window("main").unwrap();
+            #[cfg(target_os = "windows")]
+            {
+                let _ = window_vibrancy::apply_blur(&window, Some((10, 14, 26, 150)));
+            }
+            #[cfg(target_os = "macos")]
+            {
+                let _ = window_vibrancy::apply_vibrancy(&window, window_vibrancy::NSVisualEffectMaterial::HudWindow, None, None);
+            }
+            Ok(())
+        })
         .manage(AppState {
             downloader: Mutex::new(None),
         })

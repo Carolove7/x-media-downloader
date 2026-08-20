@@ -1,38 +1,12 @@
 {
+  "productName": "X Media Downloader",
+  "version": "1.0.14",
+  "identifier": "com.twitter.downloader",
   "build": {
-    "beforeDevCommand": "",
-    "beforeBuildCommand": "",
-    "devPath": "../ui",
-    "distDir": "../ui",
-    "withGlobalTauri": true
+    "frontendDist": "../ui"
   },
-  "package": {
-    "productName": "TwitterDownloader",
-    "version": "1.0.13"
-  },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "dialog": {
-        "all": true,
-        "open": true
-      },
-      "fs": {
-        "all": true
-      }
-    },
-    "bundle": {
-      "active": true,
-      "targets": "all",
-      "identifier": "com.twitter.downloader",
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ]
-    },
+  "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "title": "X Media Downloader",
@@ -40,8 +14,27 @@
         "height": 840,
         "minWidth": 760,
         "minHeight": 700,
-        "resizable": true
+        "resizable": true,
+        "transparent": true,
+        "decorations": true
       }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "dialog": {}
   }
 }

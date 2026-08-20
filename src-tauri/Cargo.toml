@@ -1,13 +1,15 @@
 [package]
 name = "twitter-media-downloader"
-version = "1.0.13"
+version = "1.0.14"
 edition = "2021"
 
 [build-dependencies]
-tauri-build = { version = "1.5", features = [] }
+tauri-build = { version = "2.0.0" }
 
 [dependencies]
-tauri = { version = "1.5", features = ["dialog-all", "fs-all", "shell-open"] }
+tauri = { version = "2.0.0" }
+tauri-plugin-dialog = "2.0.0"
+window-vibrancy = "0.5.2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1.35", features = ["full"] }
@@ -22,5 +24,3 @@ dirs = "5.0"
 winreg = "0.52"
 
 [features]
-# This feature must be forwarded to the tauri crate custom-protocol
-custom-protocol = ["tauri/custom-protocol"]
