@@ -81,20 +81,20 @@ async fn start_download(app: AppHandle, state: State<'_, AppState>, config: AppC
     tokio::spawn(async move {
         if let Err(e) = mgr.run(app.clone(), config).await {
             let now = Local::now().format("%H:%M:%S").to_string();
-            let msg = format!(">>> 任务执行出错，已终止: {e}");
+            let msg = format!(">>> Task error, aborted: {e}");
             log_to_file("error", &msg);
             let _ = app.emit_all(
                 "download-log",
                 LogPayload { level: "error".into(), message: msg, timestamp: now.clone() },
             );
-            let hint = ">>> 请检?Cookie 是否有效、网络能否访?twitter.com".to_string();
+            let hint = ">>> 璇锋鏌ookie 鏄惁鏈夋晥銆佺綉缁滆兘鍚﹁?twitter.com".to_string();
             log_to_file("error", &hint);
             let _ = app.emit_all(
                 "download-log",
                 LogPayload { level: "error".into(), message: hint, timestamp: now },
             );
         }
-    });
+            let hint = ">>> Check if Cookie is valid and network can access twitter.com".to_string();
     Ok(())
 }
 
@@ -108,7 +108,7 @@ async fn cancel_download(app: AppHandle, state: State<'_, AppState>) -> Result<(
     let now = Local::now().format("%H:%M:%S").to_string();
     let _ = app.emit_all(
         "download-log",
-        LogPayload { level: "warn".into(), message: ">>> 收到取消指令，正在中断队列?.into(), timestamp: now },
+        LogPayload { level: "warn".into(), message: ">>> Cancel command received, aborting queue".into(), timestamp: now },
     );
     Ok(())
 }
@@ -125,21 +125,21 @@ async fn open_download_dir(_app: AppHandle, config: AppConfig) -> Result<(), Str
         std::process::Command::new("explorer")
             .arg(&path_str)
             .spawn()
-            .map_err(|e| format!("打开目录失败: {e}"))?;
+            .map_err(|e| format!("Failed to open directory: {e}"))?;
     }
     #[cfg(target_os = "macos")]
     {
         std::process::Command::new("open")
             .arg(&path_str)
             .spawn()
-            .map_err(|e| format!("打开目录失败: {e}"))?;
+            .map_err(|e| format!("Failed to open directory: {e}"))?;
     }
     #[cfg(target_os = "linux")]
     {
         std::process::Command::new("xdg-open")
             .arg(&path_str)
             .spawn()
-            .map_err(|e| format!("打开目录失败: {e}"))?;
+            .map_err(|e| format!("Failed to open directory: {e}"))?;
     }
     Ok(())
 }
@@ -176,5 +176,5 @@ fn main() {
             open_download_dir
         ])
         .run(tauri::generate_context!())
-        .expect("运行 Tauri 应用程序出错");
-}
+        .expect("Failed to run Tauri application");
+        .expect("Failed to run Tauri application");
