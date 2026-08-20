@@ -1,4 +1,4 @@
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 
 mod downloader;
 mod twitter_client;
@@ -186,6 +186,12 @@ fn default_config() -> AppConfig {
 }
 
 fn main() {
+    std::panic::set_hook(Box::new(|info| {
+        use std::io::Write;
+        let mut file = std::fs::File::create("C:\\crash_log.txt").unwrap_or_else(|_| std::fs::File::create("crash_log.txt").unwrap());
+        let _ = writeln!(file, "Panic occurred: {:?}", info);
+    }));
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
 

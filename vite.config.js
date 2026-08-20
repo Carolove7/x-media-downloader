@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 
-export default defineConfig(async () => ({
+export default defineConfig(async () => ({ base: "./",
   plugins: [vue()],
   clearScreen: false,
   server: {
