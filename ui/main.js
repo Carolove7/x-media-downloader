@@ -78,18 +78,26 @@ async function init() {
 }
 
 function populateRecentUserIds(list) {
-  recentUserIdsList.innerHTML = "";
+  recentUserIdsList.innerHTML = '<option value="" disabled selected>历史记录 ▼</option>';
   const seen = new Set();
-  for (const id of [userIdInput.value, ...list]) {
+  for (const id of list) {
     const v = (id || "").trim();
     if (v && !seen.has(v)) {
       seen.add(v);
       const opt = document.createElement("option");
       opt.value = v;
+      opt.textContent = v;
       recentUserIdsList.appendChild(opt);
     }
   }
 }
+
+recentUserIdsList.addEventListener('change', (e) => {
+  if (e.target.value) {
+    userIdInput.value = e.target.value;
+    e.target.selectedIndex = 0;
+  }
+});
 
 function initDatePickers() {
   const today = new Date();

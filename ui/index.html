@@ -16,8 +16,10 @@
         <div class="form-row">
           <label for="userId">账户 ID:</label>
           <div class="input-wrap">
-            <input type="text" id="userId" list="recentUserIds" placeholder="例如: elonmusk" autocomplete="off" />
-            <datalist id="recentUserIds"></datalist>
+            <input type="text" id="userId" placeholder="例如: elonmusk" autocomplete="off" />
+            <select id="recentUserIds" class="history-select">
+              <option value="" disabled selected>历史记录 ▼</option>
+            </select>
           </div>
         </div>
 
@@ -51,13 +53,13 @@
           <label>时间范围:</label>
           <div class="date-range">
             <span class="date-label">起始</span>
-            <select id="startYear" class="date-select"></select>
-            <select id="startMonth" class="date-select"></select>
-            <select id="startDay" class="date-select"></select>
+            <select id="startYear" class="date-select year-select"></select>
+            <select id="startMonth" class="date-select month-select"></select>
+            <select id="startDay" class="date-select day-select"></select>
             <span class="date-label">至</span>
-            <select id="endYear" class="date-select"></select>
-            <select id="endMonth" class="date-select"></select>
-            <select id="endDay" class="date-select"></select>
+            <select id="endYear" class="date-select year-select"></select>
+            <select id="endMonth" class="date-select month-select"></select>
+            <select id="endDay" class="date-select day-select"></select>
             <label class="checkbox-inline">
               <input type="checkbox" id="chkUnlimitedTime" checked />
               <span>不限时间</span>

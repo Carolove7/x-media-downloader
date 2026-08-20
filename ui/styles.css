@@ -53,7 +53,7 @@ body {
   padding: 16px 18px;
 }
 
-/* 配置卡 / 操作卡保持内容高度，不随窗口拉伸被压缩；底部留白交给日志卡吸收 */
+/* 閰嶇疆鍗?/ 鎿嶄綔鍗′繚鎸佸唴瀹归珮搴︼紝涓嶉殢绐楀彛鎷変几琚帇缂╋紱搴曢儴鐣欑櫧浜ょ粰鏃ュ織鍗″惛鏀?*/
 .config-card,
 .action-card {
   flex-shrink: 0;
@@ -66,7 +66,7 @@ body {
   margin-bottom: 12px;
 }
 
-/* 表单 */
+/* 琛ㄥ崟 */
 .form-body {
   display: flex;
   flex-direction: column;
@@ -120,7 +120,7 @@ input[type="password"]::placeholder {
   color: #4a5a78;
 }
 
-/* 按钮 */
+/* 鎸夐挳 */
 .btn {
   height: 36px;
   padding: 0 16px;
@@ -168,7 +168,7 @@ input[type="password"]::placeholder {
   font-size: 12px;
 }
 
-/* 日期范围 */
+/* 鏃ユ湡鑼冨洿 */
 .date-range {
   flex: 1;
   display: flex;
@@ -184,10 +184,11 @@ input[type="password"]::placeholder {
 }
 
 .date-select {
-  width: 64px;
   flex: none;
-  padding: 0 8px;
+  padding: 0 4px;
 }
+.year-select { width: 70px; }
+.month-select, .day-select { width: 50px; }
 
 .checkbox-inline {
   display: inline-flex;
@@ -206,7 +207,7 @@ input[type="password"]::placeholder {
   cursor: pointer;
 }
 
-/* 操作区 */
+/* 鎿嶄綔鍖?*/
 .action-row {
   display: flex;
   align-items: center;
@@ -268,7 +269,7 @@ input[type="password"]::placeholder {
 .status-text.success { color: var(--success); }
 .status-text.cancelled { color: var(--danger); }
 
-/* 进度条 */
+/* 杩涘害鏉?*/
 .progress-row {
   display: flex;
   align-items: center;
@@ -292,15 +293,16 @@ input[type="password"]::placeholder {
 }
 
 .progress-text {
-  width: 78px;
+  min-width: 90px;
   text-align: right;
   font-size: 13px;
   font-weight: 700;
   color: var(--secondary);
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
-/* 统计卡 */
+/* 缁熻鍗?*/
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -346,7 +348,7 @@ input[type="password"]::placeholder {
   color: var(--secondary);
 }
 
-/* 日志 */
+/* 鏃ュ織 */
 .log-card {
   flex: 1 1 auto;
   display: flex;
@@ -387,8 +389,23 @@ input[type="password"]::placeholder {
 .log-line.warn { color: #ffd400; }
 .log-line.info { color: #8b98a5; }
 
-/* 滚动条 */
+/* 婊氬姩鏉?*/
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #2a3652; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #3a4a6e; }
+
+.history-select {
+  width: 110px;
+  flex: none;
+  border-left: 1px solid var(--border);
+  background-color: var(--ghost-bg);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  text-align: center;
+  padding-left: 8px;
+}
+.history-select:hover {
+  background-color: var(--ghost-hover);
+}
