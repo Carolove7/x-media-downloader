@@ -8,7 +8,7 @@ use chrono::{Datelike, Local};
 use downloader::DownloadManager;
 use std::path::PathBuf;
 use std::sync::Mutex;
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Manager, State, Emitter};
 use types::{AppConfig, LogPayload};
 
 const RECENT_USER_ID_LIMIT: usize = 7;
