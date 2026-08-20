@@ -173,6 +173,7 @@ fn default_config() -> AppConfig {
         user_id: "".into(),
         save_path: "".into(),
         concurrency: Some(8),
+        proxy: None,
         recent_user_ids: Vec::new(),
         media_filter: "all".into(),
         unlimited_time: true,

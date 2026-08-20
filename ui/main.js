@@ -8,6 +8,7 @@ const recentUserIdsList = document.getElementById("recentUserIds");
 const savePathInput = document.getElementById("savePath");
 const authTokenInput = document.getElementById("authToken");
 const ct0Input = document.getElementById("ct0");
+const proxyInput = document.getElementById("proxyInput");
 const startYear = document.getElementById("startYear");
 const startMonth = document.getElementById("startMonth");
 const startDay = document.getElementById("startDay");
@@ -48,6 +49,7 @@ async function init() {
       savePathInput.value = currentConfig.save_path || "";
       authTokenInput.value = currentConfig.auth_token || "";
       ct0Input.value = currentConfig.ct0 || "";
+      if (proxyInput) proxyInput.value = currentConfig.proxy || "";
       concurrencyInput.value = String(currentConfig.concurrency || 8);
 
       // 最近账户
@@ -220,6 +222,7 @@ function buildConfig(includeRecent = true) {
   const cfg = {
     auth_token: authTokenInput.value.trim(),
     ct0: ct0Input.value.trim(),
+    proxy: proxyInput ? proxyInput.value.trim() : "",
     user_id: userIdInput.value.trim(),
     save_path: savePathInput.value.trim(),
     concurrency: parseInt(concurrencyInput.value, 10) || 8,

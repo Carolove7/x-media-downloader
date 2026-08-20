@@ -36,7 +36,13 @@ impl DownloadManager {
         let screen_name = config.user_id.trim_start_matches('@').to_string();
         eprintln!("[DIAG] === DownloadManager::run start for @{} ===", screen_name);
 
-        let client = match TwitterClient::new(&config.auth_token, &config.ct0, &screen_name, &config.time_range()) {
+        let client = match TwitterClient::new(
+            &config.auth_token,
+            &config.ct0,
+            &screen_name,
+            &config.time_range(),
+            config.proxy.as_deref(),
+        ) {
             Ok(c) => { eprintln!("[DIAG] TwitterClient created OK"); c }
             Err(e) => { eprintln!("[DIAG] TwitterClient create FAILED: {}", e); return Err(e); }
         };
@@ -100,9 +106,8 @@ impl DownloadManager {
         // 3. 并发下载
         let concurrency = config.concurrency.unwrap_or(8).clamp(1, 32);
         let semaphore = Arc::new(Semaphore::new(concurrency));
-        // 复用 TwitterClient 的带鉴权 client（与 Python 参考一致：媒体下载也携带 auth cookie / bearer），
-        // 对 twimg CDN 更稳；reqwest::Client 内部为 Arc，clone 代价极低。
-        let http_client = client.client().clone();
+        // 使用媒体专用 Client（不带 GraphQL 鉴权头，防止 CDN 节点 400 校验拦截）
+        let http_client = client.media_client().clone();
 
         // 启动实时速度监控
         let speed_monitor = self.start_speed_monitor(app.clone(), total, downloaded.clone(), skip_count.clone(), failed.clone(), processed.clone());
@@ -145,14 +150,26 @@ impl DownloadManager {
                     return;
                 }
 
-                // 对齐参考版 down_save：图片优先原图 (?name=orig)，若 404 则回退 4096x4096；视频走直链
+                // 图片优先原图 (?name=orig)，若 404 则回退 4096x4096 / large；视频走直链
                 let is_jpg = item.ext == "jpg";
                 let url_orig = if is_jpg {
-                    quote_url(&format!("{}?name=orig", item.url))
+                    if item.url.contains('?') {
+                        format!("{}&name=orig", item.url)
+                    } else {
+                        format!("{}?name=orig", item.url)
+                    }
                 } else {
-                    quote_url(&item.url)
+                    item.url.clone()
                 };
-                let url_fallback = quote_url(&format!("{}?format=jpg&name=4096x4096", item.url));
+                let url_fallback = if is_jpg {
+                    if item.url.contains('?') {
+                        format!("{}&name=4096x4096", item.url)
+                    } else {
+                        format!("{}?name=4096x4096", item.url)
+                    }
+                } else {
+                    item.url.clone()
+                };
                 let mut use_fallback = false;
 
                 let mut last_status = 0u16;
