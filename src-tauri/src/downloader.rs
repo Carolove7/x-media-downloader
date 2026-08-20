@@ -6,7 +6,7 @@ use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::AppHandle;
 use tokio::fs::{self, File};
 use tokio::io::AsyncWriteExt;
 use tokio::sync::Semaphore;
@@ -503,7 +503,7 @@ impl DownloadManager {
 
     fn emit_progress_static(app: &AppHandle, current: usize, total: usize, downloaded: usize, skipped: usize, failed: usize, speed: f64) {
         let percent = if total > 0 { (current as f64 / total as f64) * 100.0 } else { 0.0 };
-        let _ = app.emit("download-progress", ProgressPayload {
+        let _ = app.emit_all("download-progress", ProgressPayload {
             current,
             total,
             downloaded,
@@ -528,7 +528,7 @@ impl DownloadManager {
 
     fn log_static(app: &AppHandle, level: &str, msg: &str) {
         crate::log_to_file(level, msg);
-        let _ = app.emit("download-log", LogPayload {
+        let _ = app.emit_all("download-log", LogPayload {
             level: level.to_string(),
             message: msg.to_string(),
             timestamp: Local::now().format("%H:%M:%S").to_string(),

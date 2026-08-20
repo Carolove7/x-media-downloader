@@ -1,4 +1,4 @@
-
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod downloader;
 mod twitter_client;
@@ -8,7 +8,7 @@ use chrono::{Datelike, Local};
 use downloader::DownloadManager;
 use std::path::PathBuf;
 use std::sync::Mutex;
-use tauri::{AppHandle, Manager, State, Emitter};
+use tauri::{AppHandle, Manager, State};
 use types::{AppConfig, LogPayload};
 
 const RECENT_USER_ID_LIMIT: usize = 7;
@@ -23,8 +23,6 @@ fn config_path() -> PathBuf {
         .join("twitter_downloader_config.json")
 }
 
-/// 日志落盘：GUI 模式下 eprintln 完全不可见，写文件便于事后诊断。
-/// 文件位置：%APPDATA%\twitter_downloader_log.txt
 pub fn log_to_file(level: &str, msg: &str) {
     use std::io::Write;
     let path = dirs::config_dir()
@@ -50,8 +48,6 @@ async fn load_config() -> Result<AppConfig, String> {
 #[tauri::command]
 async fn save_config(mut config: AppConfig) -> Result<(), String> {
     let path = config_path();
-
-    // 维护最近账户 ID 列表（最多 7 个，去重，当前排到最前）
     let user_id = config.user_id.trim().to_string();
     let mut recent: Vec<String> = Vec::new();
     if !user_id.is_empty() {
@@ -67,7 +63,6 @@ async fn save_config(mut config: AppConfig) -> Result<(), String> {
         }
     }
     config.recent_user_ids = recent;
-
     let content = serde_json::to_string_pretty(&config).map_err(|e| e.to_string())?;
     std::fs::write(path, content).map_err(|e| e.to_string())
 }
@@ -79,38 +74,27 @@ async fn start_download(app: AppHandle, state: State<'_, AppState>, config: AppC
         let mut lock = state.downloader.lock().unwrap();
         *lock = Some(manager);
     }
-
     let mgr = {
         let lock = state.downloader.lock().unwrap();
         lock.as_ref().unwrap().clone()
     };
-
     tokio::spawn(async move {
         if let Err(e) = mgr.run(app.clone(), config).await {
             let now = Local::now().format("%H:%M:%S").to_string();
             let msg = format!(">>> 任务执行出错，已终止: {e}");
             log_to_file("error", &msg);
-            let _ = app.emit(
+            let _ = app.emit_all(
                 "download-log",
-                LogPayload {
-                    level: "error".into(),
-                    message: msg,
-                    timestamp: now.clone(),
-                },
+                LogPayload { level: "error".into(), message: msg, timestamp: now.clone() },
             );
-            let hint = ">>> 请检查 Cookie 是否有效、网络能否访问 twitter.com".to_string();
+            let hint = ">>> 请检?Cookie 是否有效、网络能否访?twitter.com".to_string();
             log_to_file("error", &hint);
-            let _ = app.emit(
+            let _ = app.emit_all(
                 "download-log",
-                LogPayload {
-                    level: "error".into(),
-                    message: hint,
-                    timestamp: now,
-                },
+                LogPayload { level: "error".into(), message: hint, timestamp: now },
             );
         }
     });
-
     Ok(())
 }
 
@@ -121,15 +105,10 @@ async fn cancel_download(app: AppHandle, state: State<'_, AppState>) -> Result<(
         mgr.cancel();
     }
     drop(lock);
-    // 立即给出取消反馈，避免用户点击后“毫无反应”的错觉
     let now = Local::now().format("%H:%M:%S").to_string();
-    let _ = app.emit(
+    let _ = app.emit_all(
         "download-log",
-        LogPayload {
-            level: "warn".into(),
-            message: ">>> 收到取消指令，正在中断队列…".into(),
-            timestamp: now,
-        },
+        LogPayload { level: "warn".into(), message: ">>> 收到取消指令，正在中断队列?.into(), timestamp: now },
     );
     Ok(())
 }
@@ -138,7 +117,6 @@ async fn cancel_download(app: AppHandle, state: State<'_, AppState>) -> Result<(
 async fn open_download_dir(_app: AppHandle, config: AppConfig) -> Result<(), String> {
     let screen_name = config.user_id.trim_start_matches('@');
     let dir = PathBuf::from(&config.save_path).join(screen_name);
-    // 目录不存在则尝试打开父目录
     let open_path = if dir.exists() { dir } else { PathBuf::from(&config.save_path) };
     let path_str = open_path.to_string_lossy().to_string();
 
@@ -186,15 +164,7 @@ fn default_config() -> AppConfig {
 }
 
 fn main() {
-    std::panic::set_hook(Box::new(|info| {
-        use std::io::Write;
-        let mut file = std::fs::File::create("C:\\crash_log.txt").unwrap_or_else(|_| std::fs::File::create("crash_log.txt").unwrap());
-        let _ = writeln!(file, "Panic occurred: {:?}", info);
-    }));
-
     tauri::Builder::default()
-        .plugin(tauri_plugin_dialog::init())
-
         .manage(AppState {
             downloader: Mutex::new(None),
         })
