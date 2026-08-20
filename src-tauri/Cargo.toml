@@ -22,6 +22,5 @@ dirs = "5.0"
 winreg = "0.52"
 
 [features]
-# 生产构建 / 未在 tauri.conf.json 指定 dev server 时由 Tauri CLI 启用
-# �?feature 必须转发�?tauri crate �?custom-protocol
+# This feature must be forwarded to the tauri crate custom-protocol
 custom-protocol = ["tauri/custom-protocol"]
