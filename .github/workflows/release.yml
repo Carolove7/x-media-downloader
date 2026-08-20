@@ -1,4 +1,4 @@
-﻿name: Build and Release EXE
+name: Build and Release EXE
 
 on:
   workflow_dispatch:
