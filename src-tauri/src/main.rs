@@ -87,14 +87,14 @@ async fn start_download(app: AppHandle, state: State<'_, AppState>, config: AppC
                 "download-log",
                 LogPayload { level: "error".into(), message: msg, timestamp: now.clone() },
             );
-            let hint = ">>> 璇锋鏌ookie 鏄惁鏈夋晥銆佺綉缁滆兘鍚﹁?twitter.com".to_string();
+            let hint = ">>> Check if Cookie is valid and network can access twitter.com".to_string();
             log_to_file("error", &hint);
             let _ = app.emit_all(
                 "download-log",
                 LogPayload { level: "error".into(), message: hint, timestamp: now },
             );
         }
-            let hint = ">>> Check if Cookie is valid and network can access twitter.com".to_string();
+    });
     Ok(())
 }
 
@@ -177,4 +177,4 @@ fn main() {
         ])
         .run(tauri::generate_context!())
         .expect("Failed to run Tauri application");
-        .expect("Failed to run Tauri application");
+}
