@@ -5,37 +5,44 @@ on:
   push:
     branches:
       - main
-    tags:
-      - "v*"
 
 jobs:
   build-windows:
+    # 仅在明确的 release 提交上自动发布，避免普通提交反复覆盖同一个 Release。
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, '[release]')
     runs-on: windows-latest
     permissions:
       contents: write
 
     steps:
       - name: 检出代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 安装 Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 22
+          cache: npm
 
       - name: 安装 Rust 工具链
         uses: dtolnay/rust-toolchain@stable
 
-      - name: 安装 CLI 依赖
-        run: npm install
+      - name: 安装前端依赖
+        run: npm ci
 
-      - name: 编译 Tauri 并发布 Release
-        uses: tauri-apps/tauri-action@v0
+      - name: 编译 Tauri Windows NSIS EXE 并发布 Release
+        uses: tauri-apps/tauri-action@v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: v1.0.10
           releaseName: "X Media Downloader v1.0.10"
-          releaseBody: "X / Twitter Media Downloader Tauri + Rust Windows x64 构建版本。"
+          releaseBody: |
+            X / Twitter Media Downloader
+
+            Tauri + Rust Windows x64 构建版本。
+            本 Release 包含 NSIS Windows 安装程序（.exe）。
           releaseDraft: false
           prerelease: false
+          args: --bundles nsis
+          releaseAssetNamePattern: "[name]-[version]-[platform]-[arch][ext]"
