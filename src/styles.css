@@ -1,6 +1,6 @@
 :root {
-  --bg: rgba(10, 14, 26, 0.6);
-  --card-bg: rgba(17, 23, 38, 0.6);
+  --bg: #0a0e1a;
+  --card-bg: #111726;
   --input-bg: #0d1320;
   --text: #e6ecf5;
   --secondary: #8593a8;
@@ -25,7 +25,7 @@ html { height: 100%; }
 
 body {
   font-family: "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background-color: transparent;
+  background-color: var(--bg);
   color: var(--text);
   padding: 12px 20px 16px;
   display: flex;

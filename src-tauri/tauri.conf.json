@@ -1,6 +1,6 @@
 {
   "productName": "X Media Downloader",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "identifier": "com.twitter.downloader",
   "build": {
     "beforeDevCommand": "npm run dev", "beforeBuildCommand": "npm run build", "frontendDist": "../dist", "devUrl": "http://localhost:1420"
@@ -15,7 +15,7 @@
         "minWidth": 760,
         "minHeight": 700,
         "resizable": true,
-        "transparent": true,
+        "transparent": false,
         "decorations": true
       }
     ],
