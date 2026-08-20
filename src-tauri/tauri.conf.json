@@ -1,15 +1,15 @@
 {
   "productName": "X Media Downloader",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "identifier": "com.twitter.downloader",
   "build": {
-    "frontendDist": "../ui"
+    "beforeDevCommand": "npm run dev", "beforeBuildCommand": "npm run build", "frontendDist": "../dist", "devUrl": "http://localhost:1420"
   },
   "app": {
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "X Media Downloader",
+        "label": "main", "title": "X Media Downloader",
         "width": 880,
         "height": 840,
         "minWidth": 760,

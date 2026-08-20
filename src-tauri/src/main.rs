@@ -189,14 +189,15 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
-            let window = app.get_webview_window("main").unwrap();
-            #[cfg(target_os = "windows")]
-            {
-                let _ = window_vibrancy::apply_blur(&window, Some((10, 14, 26, 150)));
-            }
-            #[cfg(target_os = "macos")]
-            {
-                let _ = window_vibrancy::apply_vibrancy(&window, window_vibrancy::NSVisualEffectMaterial::HudWindow, None, None);
+            if let Some(window) = app.get_webview_window("main") {
+                #[cfg(target_os = "windows")]
+                {
+                    let _ = window_vibrancy::apply_blur(&window, Some((10, 14, 26, 150)));
+                }
+                #[cfg(target_os = "macos")]
+                {
+                    let _ = window_vibrancy::apply_vibrancy(&window, window_vibrancy::NSVisualEffectMaterial::HudWindow, None, None);
+                }
             }
             Ok(())
         })

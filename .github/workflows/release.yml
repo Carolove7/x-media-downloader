@@ -37,8 +37,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: v1.0.14
-          releaseName: "X Media Downloader v1.0.14"
-          releaseBody: "X Media Downloader v1.0.14 - Fixed download by aligning with Python reference implementation."
+          tagName: v1.0.15
+          releaseName: "X Media Downloader v1.0.15"
+          releaseBody: "X Media Downloader v1.0.15 - Fixed download by aligning with Python reference implementation."
           releaseDraft: false
           prerelease: false
