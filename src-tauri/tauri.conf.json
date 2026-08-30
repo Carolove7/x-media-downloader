@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "X媒体下载器",
+  "productName": "XMD",
   "version": "1.0.0",
   "identifier": "x.media.downloader",
   "build": {
@@ -26,7 +26,6 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
-    "icon": ["icons/icon.ico"],
-    "file_name": "XMD"
+    "icon": ["icons/icon.ico"]
   }
 }
