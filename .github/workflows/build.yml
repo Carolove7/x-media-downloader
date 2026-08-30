@@ -33,9 +33,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "X Media Downloader ${{ github.ref_name }}"
-          releaseBody: "GitHub Actions 自动构建的 Windows x64 安装包。"
+          # 仅打 v* 标签时创建 Release（标题形如 "X Media Downloader v1.0.0"）；
+          # push 到 main 只构建并上传 artifact，不会生成 "main" 标题的 Release
+          tagName: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
+          releaseName: ${{ startsWith(github.ref, 'refs/tags/') && format('X Media Downloader {0}', github.ref_name) || '' }}
+          releaseBody: ${{ startsWith(github.ref, 'refs/tags/') && 'GitHub Actions 自动构建的 Windows x64 安装包。' || '' }}
           releaseDraft: false
           prerelease: false
 

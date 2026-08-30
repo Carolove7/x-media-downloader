@@ -36,7 +36,7 @@ const USER_MEDIA_FEATURES: &str = r#"{"responsive_web_graphql_exclude_directive_
 // ----------------- 配置持久化（config.json，与 exe 同目录） -----------------
 
 fn default_concurrency() -> u32 {
-    8
+    16
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -380,7 +380,7 @@ impl Downloader {
             client,
             screen_name: screen_name.clone(),
             save_path: params.save_path.trim().to_string(),
-            concurrency: params.concurrency.clamp(1, 16) as usize,
+            concurrency: params.concurrency.clamp(1, 32) as usize,
             media_filter: params.media_filter.clone(),
             time_range: params.time_range.clone(),
             time_bounds: parse_time_range(&params.time_range),
@@ -1090,7 +1090,7 @@ async fn start_download(
 
     let app_handle = app.clone();
     let params = DownloadParams {
-        concurrency: params.concurrency.clamp(1, 16),
+        concurrency: params.concurrency.clamp(1, 32),
         ..params
     };
 

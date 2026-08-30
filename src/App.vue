@@ -102,12 +102,10 @@
 
         <span class="action-label">线程数</span>
         <select v-model.number="concurrency" class="concurrency-select">
-          <option v-for="n in 16" :key="n" :value="n">{{ n }}</option>
+          <option v-for="n in 32" :key="n" :value="n">{{ n }}</option>
         </select>
 
         <button class="btn-ghost" @click="openFolder">打开目录</button>
-
-        <span class="status" :style="{ color: statusColor }">状态: {{ statusText }}</span>
       </div>
 
       <div class="progress-row">
@@ -115,6 +113,7 @@
           <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
         </div>
         <span class="progress-text">{{ progressText }}</span>
+        <span class="status" :style="{ color: statusColor }">状态: {{ statusText }}</span>
       </div>
 
       <div class="stats-grid">
@@ -155,7 +154,7 @@ const user_id = ref('ekin9527')
 const save_path = ref('E:/x')
 const auth_token = ref('')
 const ct0 = ref('')
-const concurrency = ref(8)
+const concurrency = ref(16)
 const media_filter_label = ref('全部媒体')
 const recent_ids = ref([])
 
@@ -355,7 +354,7 @@ onMounted(async () => {
     if (cfg.save_path) save_path.value = cfg.save_path
     if (cfg.auth_token) auth_token.value = cfg.auth_token
     if (cfg.ct0) ct0.value = cfg.ct0
-    if (cfg.concurrency >= 1 && cfg.concurrency <= 16) concurrency.value = cfg.concurrency
+    if (cfg.concurrency >= 1 && cfg.concurrency <= 32) concurrency.value = cfg.concurrency
     if (cfg.media_filter_label) media_filter_label.value = cfg.media_filter_label
     if (Array.isArray(cfg.recent_user_ids)) recent_ids.value = cfg.recent_user_ids
     if (cfg.time_range && cfg.time_range.includes(':')) {
@@ -761,6 +760,8 @@ function onFinished(cancelled) {
   font-size: 12px;
   font-weight: bold;
   color: var(--secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .progress-row {
