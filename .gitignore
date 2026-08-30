@@ -1,0 +1,12 @@
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/gen/
+*.log
+
+# Build outputs & distributables (binaries / portable zips — not source)
+release/
+*.zip
+
+# Runtime config may contain X/Twitter auth cookies — never commit secrets
+config.json

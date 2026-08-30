@@ -1,0 +1,49 @@
+name: Build
+
+# 任何推送到 main、打 v* 标签、或手动触发时，都会自动构建 Windows 安装包。
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 安装 Rust 工具链 (MSVC)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: 安装前端依赖
+        run: npm install
+
+      - name: 编译 Tauri 并发布
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "X Media Downloader ${{ github.ref_name }}"
+          releaseBody: "GitHub Actions 自动构建的 Windows x64 安装包。"
+          releaseDraft: false
+          prerelease: false
+
+      # 仅 push 到 main 时，把构建产物作为 artifact 上传，方便直接下载测试
+      - name: 上传构建产物
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: x-media-downloader-build
+          path: src-tauri/target/release/bundle/**/*
+          if-no-files-found: warn
