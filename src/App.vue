@@ -1416,11 +1416,10 @@ function onFinished(cancelled) {
   color: var(--fluent-text-secondary);
 }
 
-/* 运行日志卡片 (Fluent 2 Terminal 风格 - 紧凑缩短) */
+/* 运行日志卡片 (Fluent 2 Terminal 风格 - 自适应填充剩余高度) */
 .fluent-log-card {
-  flex: 0 0 auto;
-  max-height: 180px;
-  min-height: 130px;
+  flex: 1;
+  min-height: 160px;
   display: flex;
   flex-direction: column;
 }
@@ -1429,7 +1428,7 @@ function onFinished(cancelled) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 7px 14px 4px;
+  padding: 8px 14px 6px;
 }
 
 .fluent-log-actions {
@@ -1438,12 +1437,13 @@ function onFinished(cancelled) {
 }
 
 .fluent-log-terminal {
-  height: 105px;
+  flex: 1;
+  min-height: 110px;
   margin: 0 12px 10px;
   background: var(--fluent-log-bg);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--fluent-radius-control);
-  padding: 6px 10px;
+  padding: 8px 12px;
   overflow-y: auto;
   font-family: 'Cascadia Code', Consolas, monospace;
   font-size: 11.5px;
