@@ -12,9 +12,9 @@ on:
         type: boolean
         default: true
       tag_name:
-        description: "Release Tag (例如 v1.0.1-pre)"
+        description: "Release Tag (例如 v1.1.0-pre)"
         type: string
-        default: "v1.0.1-pre"
+        default: "v1.1.0-pre"
 
 permissions:
   contents: write
@@ -48,9 +48,6 @@ jobs:
             if [[ "$TAG" == *"pre"* ]] || [[ "$TAG" == *"dev"* ]] || [[ "$TAG" == *"beta"* ]] || [[ "$TAG" == *"rc"* ]]; then
               IS_PRE="true"
             fi
-          elif [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
-            TAG="v1.0.1-pre"
-            IS_PRE="true"
           elif [[ -n "${{ inputs.tag_name }}" ]]; then
             TAG="${{ inputs.tag_name }}"
             if [[ "${{ inputs.prerelease }}" == "true" ]]; then
@@ -67,7 +64,7 @@ jobs:
         with:
           tagName: ${{ steps.release_info.outputs.tag_name }}
           releaseName: ${{ steps.release_info.outputs.tag_name != '' && format('X Media Downloader {0}', steps.release_info.outputs.tag_name) || '' }}
-          releaseBody: ${{ steps.release_info.outputs.is_prerelease == 'true' && '### X Media Downloader WinUI 3 预览版 (Pre-release)&#10;- UI 全面采用 WinUI 3 (Windows 11 Fluent Design) 设计规范&#10;- 其余后端下载与 GraphQL 逻辑保持不变' || 'GitHub Actions 自动构建的 Windows x64 安装包。' }}
+          releaseBody: ${{ steps.release_info.outputs.is_prerelease == 'true' && '### X Media Downloader WinUI 3 现代质感预览版 (Pre-release)&#10;- UI 全面采用 WinUI 3 (Windows 11 Fluent Design) 设计规范&#10;- 统计卡片与设置列表融入硬件信息磁贴与细致分层质感&#10;- 后端下载与 GraphQL 逻辑完全保持不变' || 'GitHub Actions 自动构建的 Windows x64 安装包。' }}
           releaseDraft: false
           prerelease: ${{ steps.release_info.outputs.is_prerelease == 'true' }}
 
