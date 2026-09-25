@@ -1,17 +1,5 @@
 <template>
   <div class="app-root">
-    <!-- Fluent 2 应用顶部品牌栏 -->
-    <header class="fluent-header">
-      <div class="fluent-brand">
-        <svg class="fluent-brand-icon" viewBox="0 0 24 24" width="18" height="18" fill="none">
-          <rect width="24" height="24" rx="5" fill="#60cdff" fill-opacity="0.16" />
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill="#60cdff"/>
-        </svg>
-        <span class="fluent-brand-title">X 媒体下载器</span>
-        <span class="fluent-pill-badge">Fluent Design</span>
-      </div>
-    </header>
-
     <!-- 卡片 1：账户设置 (Fluent 2 SettingsCard 风格) -->
     <section class="fluent-card">
       <div class="fluent-card-header">
@@ -223,7 +211,7 @@
         <!-- 打开下载目录 -->
         <button class="fluent-btn fluent-btn-standard" @click="openFolder">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M1.5 2.5A1.5 1.5 0 013 1h3.086a1.5 1.5 0 011.06.44l1.414 1.414A1.5 1.5 0 009.62 3.25H13A1.5 1.5 0 0114.5 4.75v8.5A1.5 1.5 0 0113 14.75H3A1.5 1.5 0 011.5 13.25v-10.75z"/>
+            <path d="M1.5 2.5A1.5 1.5 0 013 1h3.086a1.5 1.5 0 011.06.44l1.414 1.414A1.5 1.5 0 009.62 3.25H13A1.5 1.5 0 0114.5 4.75v8.5A1.5 1.5 0 0113 14.75H3A1.5 1.5 0 011.5 13.25v-10.75zm1.5-.5a.5.5 0 00-.5.5v10.75a.5.5 0 00.5.5h10a.5.5 0 00.5-.5v-8.5a.5.5 0 00-.5-.5H9.621a2.5 2.5 0 01-1.768-.732L6.44 2.104A.5.5 0 006.086 2H3z"/>
           </svg>
           <span>打开目录</span>
         </button>
@@ -570,7 +558,7 @@ onMounted(async () => {
     }
   } catch { /* 首次运行无配置 */ }
 
-  printLog('欢迎使用 X 媒体下载器 (Fluent Design 2 体验版)！', 'info')
+  printLog('欢迎使用 X 媒体下载器！', 'info')
   printLog('基于媒体唯一 ID 去重，重复运行不会重复下载；回车开始 / Esc 取消。', 'info')
 
   unlisteners.push(
@@ -718,41 +706,10 @@ function onFinished(cancelled) {
 .app-root {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   min-height: 0;
   flex: 1;
   overflow: hidden;
-}
-
-/* Fluent 2 品牌标题栏 */
-.fluent-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1px 4px 4px;
-}
-
-.fluent-brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.fluent-brand-title {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--fluent-text-primary);
-  letter-spacing: 0.15px;
-}
-
-.fluent-pill-badge {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 1px 7px;
-  background: var(--fluent-accent-subtle);
-  color: var(--fluent-accent);
-  border-radius: var(--fluent-radius-pill);
-  border: 1px solid var(--fluent-accent-border);
 }
 
 /* Fluent 2 亚克力 / 云母微光卡片 */

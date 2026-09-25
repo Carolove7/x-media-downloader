@@ -10,13 +10,14 @@
   "app": {
     "windows": [
       {
-        "title": "X媒体下载器",
+        "title": "X 媒体下载器",
         "width": 820,
         "height": 940,
         "minWidth": 780,
         "minHeight": 800,
         "resizable": true,
-        "center": true
+        "center": true,
+        "theme": "Dark"
       }
     ],
     "security": {

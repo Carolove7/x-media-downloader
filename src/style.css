@@ -2,12 +2,12 @@
 :root {
   /* Surfaces & Materials (Mica & Acrylic Layers) */
   --fluent-bg-canvas: #202020;
-  --fluent-bg-canvas-gradient: radial-gradient(circle at 50% 0%, rgba(96, 205, 255, 0.035), transparent 75%), #202020;
+  --fluent-bg-canvas-gradient: radial-gradient(circle at 50% 0%, rgba(96, 205, 255, 0.04), transparent 70%), #202020;
   
   --fluent-card-bg: rgba(255, 255, 255, 0.045);
   --fluent-card-bg-elevated: rgba(255, 255, 255, 0.07);
-  --fluent-card-stroke: rgba(255, 255, 255, 0.075);
-  --fluent-card-stroke-highlight: rgba(255, 255, 255, 0.12);
+  --fluent-card-stroke: rgba(255, 255, 255, 0.08);
+  --fluent-card-stroke-highlight: rgba(255, 255, 255, 0.14);
   
   --fluent-row-bg: rgba(255, 255, 255, 0.02);
   --fluent-row-hover: rgba(255, 255, 255, 0.045);
@@ -55,7 +55,7 @@
   --fluent-radius-pill: 20px;
 
   /* Elevations & Shadows */
-  --fluent-shadow-card: inset 0 1px 0 0 rgba(255, 255, 255, 0.06), 0 2px 12px rgba(0, 0, 0, 0.25);
+  --fluent-shadow-card: inset 0 1px 0 0 rgba(255, 255, 255, 0.06), 0 2px 14px rgba(0, 0, 0, 0.25);
   --fluent-shadow-flyout: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
   --fluent-shadow-control: 0 1px 2px rgba(0, 0, 0, 0.12);
 }
@@ -86,8 +86,8 @@ body {
 #app {
   display: flex;
   flex-direction: column;
-  padding: 8px 14px 12px;
-  gap: 8px;
+  padding: 12px 14px 14px;
+  gap: 10px;
 }
 
 /* Fluent 2 Thin Scrollbar */
