@@ -1,11 +1,20 @@
 name: Build
 
-# 任何推送到 main、打 v* 标签、或手动触发时，都会自动构建 Windows 安装包。
+# 推送到 main、dev、打 v* 标签或手动触发时，都会自动构建 Windows 安装包
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      prerelease:
+        description: "是否发布为 Pre-release"
+        type: boolean
+        default: true
+      tag_name:
+        description: "Release Tag (例如 v1.0.1-pre)"
+        type: string
+        default: "v1.0.1-pre"
 
 permissions:
   contents: write
@@ -28,24 +37,44 @@ jobs:
       - name: 安装前端依赖
         run: npm install
 
+      - name: 确定发布参数
+        id: release_info
+        shell: bash
+        run: |
+          TAG=""
+          IS_PRE="false"
+          if [[ "${{ startsWith(github.ref, 'refs/tags/') }}" == "true" ]]; then
+            TAG="${{ github.ref_name }}"
+            if [[ "$TAG" == *"pre"* ]] || [[ "$TAG" == *"dev"* ]] || [[ "$TAG" == *"beta"* ]] || [[ "$TAG" == *"rc"* ]]; then
+              IS_PRE="true"
+            fi
+          elif [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
+            TAG="v1.0.1-pre"
+            IS_PRE="true"
+          elif [[ -n "${{ inputs.tag_name }}" ]]; then
+            TAG="${{ inputs.tag_name }}"
+            if [[ "${{ inputs.prerelease }}" == "true" ]]; then
+              IS_PRE="true"
+            fi
+          fi
+          echo "tag_name=$TAG" >> $GITHUB_OUTPUT
+          echo "is_prerelease=$IS_PRE" >> $GITHUB_OUTPUT
+
       - name: 编译 Tauri 并发布
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          # 仅打 v* 标签时创建 Release（标题形如 "X Media Downloader v1.0.0"）；
-          # push 到 main 只构建并上传 artifact，不会生成 "main" 标题的 Release
-          tagName: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
-          releaseName: ${{ startsWith(github.ref, 'refs/tags/') && format('X Media Downloader {0}', github.ref_name) || '' }}
-          releaseBody: ${{ startsWith(github.ref, 'refs/tags/') && 'GitHub Actions 自动构建的 Windows x64 安装包。' || '' }}
+          tagName: ${{ steps.release_info.outputs.tag_name }}
+          releaseName: ${{ steps.release_info.outputs.tag_name != '' && format('X Media Downloader {0}', steps.release_info.outputs.tag_name) || '' }}
+          releaseBody: ${{ steps.release_info.outputs.is_prerelease == 'true' && '### X Media Downloader WinUI 3 预览版 (Pre-release)&#10;- UI 全面采用 WinUI 3 (Windows 11 Fluent Design) 设计规范&#10;- 其余后端下载与 GraphQL 逻辑保持不变' || 'GitHub Actions 自动构建的 Windows x64 安装包。' }}
           releaseDraft: false
-          prerelease: false
+          prerelease: ${{ steps.release_info.outputs.is_prerelease == 'true' }}
 
-      # 仅 push 到 main 时，把构建产物作为 artifact 上传，方便直接下载测试
       - name: 上传构建产物
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'
         uses: actions/upload-artifact@v4
         with:
-          name: x-media-downloader-build
+          name: ${{ github.ref == 'refs/heads/dev' && 'xmd-winui3-prerelease-build' || 'x-media-downloader-build' }}
           path: src-tauri/target/release/bundle/**/*
           if-no-files-found: warn

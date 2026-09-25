@@ -1,22 +1,48 @@
+/* WinUI 3 (Windows 11 Fluent Design System) Global Stylesheet */
 :root {
-  --bg: #0a0e1a;
-  --card-bg: #111726;
-  --entry-bg: #0d1320;
-  --text: #e6ecf5;
-  --secondary: #8593a8;
-  --border: #1d2740;
-  --entry-border: #252e4a;
-  --log-bg: #070b14;
-  --strip-inactive: #1a2440;
-  --btn-ghost-bg: #141d31;
-  --btn-ghost-hover: #1d2942;
-  --btn-ghost-text: #aab6cc;
-  --accent: #2f6fdb;
-  --accent-hover: #2759b8;
-  --danger: #f4212e;
-  --danger-hover: #c81e52;
-  --success: #00ba7c;
-  --warn: #ffd400;
+  /* Surfaces & Materials */
+  --win-bg: #202020;
+  --win-card-bg: rgba(255, 255, 255, 0.05);
+  --win-card-bg-elevated: rgba(255, 255, 255, 0.07);
+  --win-card-stroke: rgba(255, 255, 255, 0.08);
+  --win-card-stroke-elevated: rgba(255, 255, 255, 0.12);
+  --win-control-bg: rgba(255, 255, 255, 0.06);
+  --win-control-bg-hover: rgba(255, 255, 255, 0.09);
+  --win-control-bg-active: rgba(255, 255, 255, 0.04);
+  --win-control-stroke: rgba(255, 255, 255, 0.08);
+  --win-control-elevation: rgba(255, 255, 255, 0.38);
+  --win-flyout-bg: #2c2c2c;
+  --win-log-bg: #181818;
+
+  /* Typography Colors */
+  --win-text-primary: rgba(255, 255, 255, 0.95);
+  --win-text-secondary: rgba(255, 255, 255, 0.62);
+  --win-text-tertiary: rgba(255, 255, 255, 0.42);
+  --win-text-disabled: rgba(255, 255, 255, 0.36);
+
+  /* WinUI 3 System Accent (Windows 11 Blue) */
+  --win-accent: #60cdff;
+  --win-accent-hover: #79d4ff;
+  --win-accent-active: #4cc2f7;
+  --win-accent-text: #000000;
+  --win-accent-subtle: rgba(96, 205, 255, 0.12);
+
+  /* Status Colors */
+  --win-success: #6ccb5f;
+  --win-warning: #fce100;
+  --win-danger: #ff6b6b;
+  --win-danger-bg: rgba(255, 107, 107, 0.12);
+  --win-danger-hover: #ff5252;
+  --win-danger-stroke: rgba(255, 107, 107, 0.35);
+
+  /* Corner Radii */
+  --win-radius-card: 8px;
+  --win-radius-control: 4px;
+  --win-radius-pill: 16px;
+
+  /* Elevations */
+  --win-shadow-card: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --win-shadow-flyout: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
 * {
@@ -32,122 +58,36 @@ body,
 }
 
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  background: var(--win-bg);
+  color: var(--win-text-primary);
+  font-family: 'Segoe UI Variable Text', 'Segoe UI Variable', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Microsoft YaHei UI', 'Microsoft YaHei', sans-serif;
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 1.5;
   overflow: hidden;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
 }
 
 #app {
   display: flex;
   flex-direction: column;
-  padding: 12px 20px 16px;
-  gap: 14px;
+  padding: 10px 16px 14px;
+  gap: 10px;
 }
 
-.card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-}
-
-.card-title {
-  font-size: 14px;
-  font-weight: bold;
-  color: var(--secondary);
-  padding: 16px 18px 10px;
-}
-
-input[type='text'],
-select {
-  background: var(--entry-bg);
-  color: var(--text);
-  border: 1px solid var(--entry-border);
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-family: Consolas, 'Courier New', monospace;
-  font-size: 13px;
-  outline: none;
-  transition: border-color 0.15s;
-}
-
-input[type='text']:focus,
-select:focus {
-  border-color: var(--accent);
-}
-
-input:disabled,
-select:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-select {
-  cursor: pointer;
-}
-
-button {
-  font-family: 'Microsoft YaHei', sans-serif;
-  cursor: pointer;
-  border: none;
-  border-radius: 11px;
-  font-size: 13px;
-  font-weight: bold;
-  color: #fff;
-  transition: background 0.15s, opacity 0.15s;
-}
-
-button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.btn-primary {
-  background: var(--accent);
-  padding: 9px 0;
-  width: 100px;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--accent-hover);
-}
-
-.btn-danger {
-  background: var(--danger);
-  padding: 9px 0;
-  width: 100px;
-}
-
-.btn-danger:hover:not(:disabled) {
-  background: var(--danger-hover);
-}
-
-.btn-ghost {
-  background: var(--btn-ghost-bg);
-  color: var(--btn-ghost-text);
-  border: 1px solid var(--border);
-  font-weight: normal;
-  padding: 8px 14px;
-}
-
-.btn-ghost:hover:not(:disabled) {
-  background: var(--btn-ghost-hover);
-}
-
+/* WinUI 3 Scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--strip-inactive);
-  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--entry-border);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 ::-webkit-scrollbar-track {

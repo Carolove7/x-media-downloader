@@ -1,15 +1,35 @@
 <template>
   <div class="app-root">
-    <!-- 账户设置 -->
-    <section class="card">
-      <div class="card-title">账户设置</div>
-      <div class="config-body">
-        <div class="row">
-          <span class="row-label">账户 ID:</span>
-          <div class="row-value">
-            <div class="combo" ref="comboRef">
+    <!-- WinUI 3 应用标题栏区域 -->
+    <header class="win-app-header">
+      <div class="win-app-brand">
+        <svg class="win-app-icon" viewBox="0 0 24 24" width="18" height="18" fill="none">
+          <rect width="24" height="24" rx="5" fill="#60cdff" fill-opacity="0.16" />
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill="#60cdff"/>
+        </svg>
+        <span class="win-app-title">X 媒体下载器</span>
+        <span class="win-badge">WinUI 3</span>
+      </div>
+    </header>
+
+    <!-- 账户设置卡片 -->
+    <section class="win-card">
+      <div class="win-card-header">
+        <svg class="win-section-icon" viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
+          <path d="M10 2a4 4 0 100 8 4 4 0 000-8zm-2 4a2 2 0 114 0 2 2 0 01-4 0zm-4 9a4 4 0 014-4h4a4 4 0 014 4v1H4v-1zm2 0a2 2 0 012-2h4a2 2 0 012 2v0H6v0z"/>
+        </svg>
+        <span class="win-card-title">账户设置</span>
+      </div>
+
+      <div class="win-card-body">
+        <!-- 账户 ID -->
+        <div class="win-form-row">
+          <span class="win-label">账户 ID:</span>
+          <div class="win-control-wrapper">
+            <div class="win-combo" ref="comboRef">
               <input
                 v-model.trim="user_id"
+                class="win-textbox"
                 type="text"
                 placeholder="不含 @ 的账户 handle"
                 @keydown.down.prevent="moveActive(1)"
@@ -19,125 +39,225 @@
               />
               <button
                 type="button"
-                class="combo-toggle"
+                class="win-combo-toggle"
                 :class="{ open: comboOpen }"
                 tabindex="-1"
                 aria-label="展开历史账户"
                 @click="toggleCombo"
               >
-                <svg width="10" height="6" viewBox="0 0 10 6" aria-hidden="true">
-                  <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"
-                    stroke-linecap="round" stroke-linejoin="round" />
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </button>
-              <div v-if="comboOpen" class="combo-list">
+
+              <!-- WinUI 3 Flyout 下拉菜单 -->
+              <div v-if="comboOpen" class="win-flyout">
                 <div
                   v-for="(id, i) in recent_ids"
                   :key="id"
-                  class="combo-item"
+                  class="win-flyout-item"
                   :class="{ active: i === activeIndex }"
                   @mouseenter="activeIndex = i"
                   @mousedown.prevent="selectId(id)"
-                >{{ id }}</div>
-                <div v-if="!recent_ids.length" class="combo-empty">暂无历史记录</div>
+                >
+                  <span class="win-flyout-indicator"></span>
+                  <span class="win-flyout-text">{{ id }}</span>
+                </div>
+                <div v-if="!recent_ids.length" class="win-flyout-empty">暂无历史记录</div>
               </div>
             </div>
           </div>
         </div>
 
-        <label class="row">
-          <span class="row-label">保存位置:</span>
-          <div class="row-value path-row">
-            <input v-model.trim="save_path" type="text" />
-            <button class="btn-ghost" @click="browseFolder">选择…</button>
+        <!-- 保存位置 -->
+        <div class="win-form-row">
+          <span class="win-label">保存位置:</span>
+          <div class="win-control-wrapper win-path-group">
+            <input v-model.trim="save_path" class="win-textbox" type="text" />
+            <button class="win-btn win-btn-standard" @click="browseFolder">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M1.5 2.5A1.5 1.5 0 013 1h3.086a1.5 1.5 0 011.06.44l1.414 1.414A1.5 1.5 0 009.62 3.25H13A1.5 1.5 0 0114.5 4.75v8.5A1.5 1.5 0 0113 14.75H3A1.5 1.5 0 011.5 13.25v-10.75zm1.5-.5a.5.5 0 00-.5.5v10.75a.5.5 0 00.5.5h10a.5.5 0 00.5-.5v-8.5a.5.5 0 00-.5-.5H9.621a2.5 2.5 0 01-1.768-.732L6.44 2.104A.5.5 0 006.086 2H3z"/>
+              </svg>
+              <span>选择…</span>
+            </button>
           </div>
-        </label>
+        </div>
 
-        <label class="row">
-          <span class="row-label">auth_token:</span>
-          <div class="row-value"><input v-model.trim="auth_token" type="text" /></div>
-        </label>
+        <!-- auth_token -->
+        <div class="win-form-row">
+          <span class="win-label">auth_token:</span>
+          <div class="win-control-wrapper">
+            <input v-model.trim="auth_token" class="win-textbox" type="text" placeholder="Cookie 中的 auth_token" />
+          </div>
+        </div>
 
-        <label class="row">
-          <span class="row-label">ct0:</span>
-          <div class="row-value"><input v-model.trim="ct0" type="text" /></div>
-        </label>
+        <!-- ct0 -->
+        <div class="win-form-row">
+          <span class="win-label">ct0:</span>
+          <div class="win-control-wrapper">
+            <input v-model.trim="ct0" class="win-textbox" type="text" placeholder="Cookie 中的 ct0" />
+          </div>
+        </div>
 
-        <div class="row">
-          <span class="row-label">时间范围:</span>
-          <div class="row-value date-row">
-            <div class="date-group">
-              <span class="date-tag">起始</span>
-              <select v-model="sy" :disabled="noLimit" @change="refreshDays('s')"><option v-for="y in years" :key="y" :value="y">{{ y }}</option></select>
-              <select v-model="sm" :disabled="noLimit" @change="refreshDays('s')"><option v-for="m in months" :key="m" :value="m">{{ m }}</option></select>
-              <select v-model="sd" :disabled="noLimit"><option v-for="d in startDays" :key="d" :value="d">{{ d }}</option></select>
+        <!-- 时间范围 -->
+        <div class="win-form-row">
+          <span class="win-label">时间范围:</span>
+          <div class="win-control-wrapper win-date-container">
+            <div class="win-date-picker-group">
+              <span class="win-date-tag">起始</span>
+              <select v-model="sy" class="win-select" :disabled="noLimit" @change="refreshDays('s')">
+                <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
+              </select>
+              <select v-model="sm" class="win-select" :disabled="noLimit" @change="refreshDays('s')">
+                <option v-for="m in months" :key="m" :value="m">{{ m }}</option>
+              </select>
+              <select v-model="sd" class="win-select" :disabled="noLimit">
+                <option v-for="d in startDays" :key="d" :value="d">{{ d }}</option>
+              </select>
             </div>
-            <span class="date-sep">至</span>
-            <div class="date-group">
-              <span class="date-tag">结束</span>
-              <select v-model="ey" :disabled="noLimit" @change="refreshDays('e')"><option v-for="y in years" :key="y" :value="y">{{ y }}</option></select>
-              <select v-model="em" :disabled="noLimit" @change="refreshDays('e')"><option v-for="m in months" :key="m" :value="m">{{ m }}</option></select>
-              <select v-model="ed" :disabled="noLimit"><option v-for="d in endDays" :key="d" :value="d">{{ d }}</option></select>
+
+            <span class="win-date-separator">至</span>
+
+            <div class="win-date-picker-group">
+              <span class="win-date-tag">结束</span>
+              <select v-model="ey" class="win-select" :disabled="noLimit" @change="refreshDays('e')">
+                <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
+              </select>
+              <select v-model="em" class="win-select" :disabled="noLimit" @change="refreshDays('e')">
+                <option v-for="m in months" :key="m" :value="m">{{ m }}</option>
+              </select>
+              <select v-model="ed" class="win-select" :disabled="noLimit">
+                <option v-for="d in endDays" :key="d" :value="d">{{ d }}</option>
+              </select>
             </div>
-            <label class="limit-check">
+
+            <!-- WinUI 3 Checkbox -->
+            <label class="win-checkbox">
               <input type="checkbox" v-model="noLimit" />
-              <span>不限时间</span>
+              <span class="win-checkbox-box">
+                <svg v-if="noLimit" width="10" height="8" viewBox="0 0 10 8" fill="none">
+                  <path d="M1 3.5L3.5 6L9 1" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <span class="win-checkbox-label">不限时间</span>
             </label>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 操作区 -->
-    <section class="card">
-      <div class="action-bar">
-        <button class="btn-primary" :disabled="running" @click="startDownload">开始下载</button>
-        <button class="btn-danger" :disabled="!running || cancelling" @click="cancelDownload">取消下载</button>
+    <!-- 操作与监控卡片 -->
+    <section class="win-card">
+      <div class="win-action-bar">
+        <!-- 开始下载 (WinUI 3 Accent Button) -->
+        <button class="win-btn win-btn-accent" :disabled="running" @click="startDownload">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 12l4-4h-2.5V2h-3v6H4l4 4z"/>
+            <path d="M2 13.5v1h12v-1H2z"/>
+          </svg>
+          <span>开始下载</span>
+        </button>
 
-        <span class="action-label">类型</span>
-        <div class="segment">
-          <button v-for="opt in ['全部媒体', '仅图片', '仅视频']" :key="opt" class="segment-btn"
-            :class="{ active: media_filter_label === opt }" @click="media_filter_label = opt">{{ opt }}</button>
+        <!-- 取消下载 (WinUI 3 Destructive Button) -->
+        <button class="win-btn win-btn-danger" :disabled="!running || cancelling" @click="cancelDownload">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+            <rect x="3" y="3" width="10" height="10" rx="1.5"/>
+          </svg>
+          <span>取消下载</span>
+        </button>
+
+        <span class="win-divider"></span>
+
+        <!-- 类型选择 (WinUI 3 SegmentedControl) -->
+        <span class="win-section-label">类型</span>
+        <div class="win-segmented">
+          <button
+            v-for="opt in ['全部媒体', '仅图片', '仅视频']"
+            :key="opt"
+            class="win-segmented-item"
+            :class="{ active: media_filter_label === opt }"
+            @click="media_filter_label = opt"
+          >
+            {{ opt }}
+          </button>
         </div>
 
-        <span class="action-label">线程数</span>
-        <select v-model.number="concurrency" class="concurrency-select">
+        <span class="win-divider"></span>
+
+        <!-- 线程数选择 -->
+        <span class="win-section-label">线程数</span>
+        <select v-model.number="concurrency" class="win-select win-concurrency-select">
           <option v-for="n in 32" :key="n" :value="n">{{ n }}</option>
         </select>
 
-        <button class="btn-ghost" @click="openFolder">打开目录</button>
+        <!-- 打开目录 -->
+        <button class="win-btn win-btn-standard" @click="openFolder">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M1.5 2.5A1.5 1.5 0 013 1h3.086a1.5 1.5 0 011.06.44l1.414 1.414A1.5 1.5 0 009.62 3.25H13A1.5 1.5 0 0114.5 4.75v8.5A1.5 1.5 0 0113 14.75H3A1.5 1.5 0 011.5 13.25v-10.75z"/>
+          </svg>
+          <span>打开目录</span>
+        </button>
       </div>
 
-      <div class="progress-row">
-        <div class="progress-track">
-          <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
+      <!-- WinUI 3 进度条与状态显示 -->
+      <div class="win-progress-section">
+        <div class="win-progress-track">
+          <div class="win-progress-fill" :style="{ width: progressPercent + '%' }"></div>
         </div>
-        <span class="progress-text">{{ progressText }}</span>
-        <span class="status" :style="{ color: statusColor }">状态: {{ statusText }}</span>
+        <div class="win-progress-info">
+          <span class="win-progress-text">{{ progressText }}</span>
+          <!-- WinUI 3 InfoBadge 风格状态 -->
+          <div class="win-status-badge">
+            <span class="win-status-dot" :style="{ backgroundColor: statusColor }"></span>
+            <span class="win-status-text" :style="{ color: statusColor }">{{ statusText }}</span>
+          </div>
+        </div>
       </div>
 
-      <div class="stats-grid">
-        <div class="stat" v-for="s in statCards" :key="s.label">
-          <div class="stat-strip" :style="{ background: s.color }"></div>
-          <div class="stat-value" :style="{ color: s.color }">{{ s.value }}</div>
-          <div class="stat-unit">{{ s.unit }}</div>
-          <div class="stat-label">{{ s.label }}</div>
+      <!-- WinUI 3 统计指标卡片网格 -->
+      <div class="win-stats-grid">
+        <div class="win-stat-tile" v-for="s in statCards" :key="s.label">
+          <div class="win-stat-accent-bar" :style="{ background: s.color }"></div>
+          <div class="win-stat-main">
+            <div class="win-stat-number" :style="{ color: s.color }">{{ s.value }}</div>
+            <div class="win-stat-unit">{{ s.unit }}</div>
+          </div>
+          <div class="win-stat-title">{{ s.label }}</div>
         </div>
       </div>
     </section>
 
-    <!-- 运行日志 -->
-    <section class="card log-card">
-      <div class="log-head">
-        <span class="log-title">运行日志</span>
-        <div class="log-actions">
-          <button class="btn-ghost" @click="copyLog">复制</button>
-          <button class="btn-ghost" @click="clearLog">清空</button>
+    <!-- 运行日志卡片 -->
+    <section class="win-card win-log-card">
+      <div class="win-log-header">
+        <div class="win-log-title-wrap">
+          <svg class="win-section-icon" viewBox="0 0 16 16" width="15" height="15" fill="currentColor">
+            <path d="M2.5 1.5A1.5 1.5 0 001 3v10a1.5 1.5 0 001.5 1.5h11A1.5 1.5 0 0015 13V3a1.5 1.5 0 00-1.5-1.5h-11zm2.146 4.146a.5.5 0 01.708 0L7.5 7.793l2.146-2.147a.5.5 0 01.708.708l-2.5 2.5a.5.5 0 01-.708 0l-2.5-2.5a.5.5 0 010-.708zM4 11h8a.5.5 0 010 1H4a.5.5 0 010-1z"/>
+          </svg>
+          <span class="win-card-title">运行日志</span>
+        </div>
+        <div class="win-log-actions">
+          <button class="win-btn win-btn-standard win-btn-sm" @click="copyLog">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M4 1.5A1.5 1.5 0 015.5 0h6A1.5 1.5 0 0113 1.5v1H5.5A2.5 2.5 0 003 5v7H2.5A1.5 1.5 0 011 10.5v-9z"/>
+              <path d="M4.5 4A1.5 1.5 0 016 2.5h6A1.5 1.5 0 0113.5 4v10a1.5 1.5 0 01-1.5 1.5H6A1.5 1.5 0 014.5 14V4zm1.5-.5a.5.5 0 00-.5.5v10a.5.5 0 00.5.5h6a.5.5 0 00.5-.5V4a.5.5 0 00-.5-.5H6z"/>
+            </svg>
+            <span>复制</span>
+          </button>
+          <button class="win-btn win-btn-standard win-btn-sm" @click="clearLog">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M5.5 5.5A.5.5 0 016 6v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm2.5 0a.5.5 0 01.5.5v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm3 .5a.5.5 0 00-1 0v6a.5.5 0 001 0V6z"/>
+              <path fill-rule="evenodd" d="M14.5 3a1 1 0 01-1 1H13v9a2 2 0 01-2 2H5a2 2 0 01-2-2V4h-.5a1 1 0 01-1-1V2a1 1 0 011-1H6a1 1 0 011-1h2a1 1 0 011 1h3.5a1 1 0 011 1v1zM4.118 4L4 4.059V13a1 1 0 001 1h6a1 1 0 001-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+            </svg>
+            <span>清空</span>
+          </button>
         </div>
       </div>
-      <div class="log-area" ref="logArea">
-        <div v-for="(line, i) in logLines" :key="i" class="log-line" :class="'log-' + line.tag">
-          <span class="log-ts">{{ line.ts }}</span>{{ line.msg }}
+
+      <div class="win-log-terminal" ref="logArea">
+        <div v-for="(line, i) in logLines" :key="i" class="win-log-line" :class="'win-log-' + line.tag">
+          <span class="win-log-ts">{{ line.ts }}</span>
+          <span class="win-log-msg">{{ line.msg }}</span>
         </div>
       </div>
     </section>
@@ -149,7 +269,7 @@ import { reactive, ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 
-// ---------------- 状态 ----------------
+// ---------------- 状态定义 ----------------
 const user_id = ref('ekin9527')
 const save_path = ref('E:/x')
 const auth_token = ref('')
@@ -161,7 +281,7 @@ const recent_ids = ref([])
 const running = ref(false)
 const cancelling = ref(false)
 const statusText = ref('就绪')
-const statusColor = ref('var(--secondary)')
+const statusColor = ref('var(--win-text-secondary)')
 
 const stat = reactive({ down: 0, skip: 0, fail: 0 })
 const speedValue = ref('0')
@@ -172,13 +292,12 @@ const logLines = ref([])
 const logArea = ref(null)
 let unlisteners = []
 
-// ---------------- 账户 ID 下拉框（自定义组合框，非 datalist 气泡）----------------
+// ---------------- 账户 ID 下拉框（WinUI 3 Flyout 风格） ----------------
 const comboRef = ref(null)
 const comboOpen = ref(false)
 const activeIndex = ref(-1)
 
 function openCombo() {
-  // 即使无历史记录也展开，显示「暂无历史记录」，保证它始终是真正的下拉列表
   comboOpen.value = true
   activeIndex.value = -1
 }
@@ -277,7 +396,7 @@ function rememberRecentIds(history, current) {
   return result
 }
 
-// ---------------- 速度格式化（对应 format_download_speed） ----------------
+// ---------------- 速度格式化 ----------------
 function formatSpeed(bps) {
   let speed = Math.max(0, Number(bps) || 0)
   const units = ['B/s', 'KB/s', 'MB/s', 'GB/s']
@@ -290,7 +409,7 @@ function formatSpeed(bps) {
   return [speed.toFixed(1), units[i]]
 }
 
-// ---------------- 日志 ----------------
+// ---------------- 日志系统 ----------------
 function detectTag(msg) {
   if (msg.startsWith('[成功]')) return 'success'
   if (msg.startsWith('[跳过]')) return 'skip'
@@ -310,7 +429,8 @@ function printLog(msg, tag = null) {
 function clearLog() {
   logLines.value = []
 }
-// 原生弹窗（对应 Python 版 messagebox）
+
+// 原生弹窗
 async function dialog(title, message, level = 'warning') {
   try {
     await invoke('show_message', { title, message, level })
@@ -329,7 +449,7 @@ async function copyLog() {
   }
 }
 
-// ---------------- 进度/统计 ----------------
+// ---------------- 进度与统计计算 ----------------
 const progressPercent = computed(() => {
   if (!progress.total) return 0
   return Math.min((progress.current / progress.total) * 100, 100)
@@ -337,16 +457,16 @@ const progressPercent = computed(() => {
 const progressText = computed(() => {
   if (!progress.total) return '0%'
   const pct = Math.floor(progressPercent.value)
-  return `${pct}%  (${progress.current}/${progress.total})`
+  return `${pct}% (${progress.current}/${progress.total})`
 })
 const statCards = computed(() => [
-  { label: '已下载', value: stat.down, unit: '项', color: 'var(--success)' },
-  { label: '已跳过(重复)', value: stat.skip, unit: '项', color: 'var(--warn)' },
-  { label: '失败', value: stat.fail, unit: '项', color: 'var(--danger)' },
-  { label: '实时速度', value: speedValue.value, unit: speedUnit.value, color: 'var(--accent)' },
+  { label: '已下载', value: stat.down, unit: '项', color: 'var(--win-success)' },
+  { label: '已跳过 (重复)', value: stat.skip, unit: '项', color: 'var(--win-warning)' },
+  { label: '失败', value: stat.fail, unit: '项', color: 'var(--win-danger)' },
+  { label: '实时速度', value: speedValue.value, unit: speedUnit.value, color: 'var(--win-accent)' },
 ])
 
-// ---------------- 配置加载/保存 ----------------
+// ---------------- 生命周期与事件监听 ----------------
 onMounted(async () => {
   try {
     const cfg = await invoke('get_config')
@@ -370,7 +490,7 @@ onMounted(async () => {
     }
   } catch { /* 首次运行无配置 */ }
 
-  printLog('欢迎使用。', 'info')
+  printLog('欢迎使用 X 媒体下载器 (WinUI 3 体验版)！', 'info')
   printLog('基于媒体唯一 ID 去重，重复运行不会重复下载；回车开始 / Esc 取消。', 'info')
 
   // 后端事件
@@ -393,7 +513,6 @@ onMounted(async () => {
     await listen('xdl-done', (e) => onFinished(e.payload.cancelled)),
   )
 
-  // 快捷键：回车开始 / Esc 取消（下拉展开时回车用于选中，不触发下载）
   window.addEventListener('keydown', onKeydown)
   document.addEventListener('mousedown', onDocumentMouseDown)
 })
@@ -409,7 +528,7 @@ function onKeydown(ev) {
   else if (ev.key === 'Escape') cancelDownload()
 }
 
-// ---------------- 操作 ----------------
+// ---------------- 操作交互 ----------------
 function browseFolder() {
   invoke('browse_folder', { defaultPath: save_path.value }).then((folder) => {
     if (folder) save_path.value = folder
@@ -417,13 +536,12 @@ function browseFolder() {
 }
 
 async function openFolder() {
-  const base = save_path.value.replace(/[\\/]+$/, '') // 去掉末尾多余分隔符，避免 explorer 跳到"文档"
+  const base = save_path.value.replace(/[\\/]+$/, '')
   const uid = user_id.value.replace(/^@+/, '').trim()
   const folder = uid ? `${base}/${uid}` : base
   try {
     await invoke('open_folder', { path: folder })
   } catch (e) {
-    // 对应 Python: showinfo("该目录尚不存在") / showerror(f"无法打开目录: {e}")
     const level = String(e).includes('尚不存在') ? 'info' : 'error'
     dialog('提示', String(e).includes('尚不存在') ? '该目录尚不存在，请先执行下载。' : `无法打开目录: ${e}`, level)
   }
@@ -440,7 +558,6 @@ async function startDownload() {
   const typeMap = { 全部媒体: 'all', 仅图片: 'image', 仅视频: 'video' }
   const media_filter = typeMap[media_filter_label.value] || 'all'
 
-  // 持久化配置（字段与 Python 版 config.json 完全一致）
   try {
     await invoke('save_config', {
       cfg: {
@@ -462,7 +579,7 @@ async function startDownload() {
   running.value = true
   cancelling.value = false
   statusText.value = '正在下载…'
-  statusColor.value = 'var(--accent)'
+  statusColor.value = 'var(--win-accent)'
   progress.current = 0
   progress.total = 0
   stat.down = 0
@@ -488,7 +605,7 @@ async function startDownload() {
     running.value = false
     printLog(`[错误] 启动下载失败: ${e}`, 'error')
     statusText.value = '就绪'
-    statusColor.value = 'var(--secondary)'
+    statusColor.value = 'var(--win-text-secondary)'
   }
 }
 
@@ -496,7 +613,7 @@ async function cancelDownload() {
   if (!running.value || cancelling.value) return
   cancelling.value = true
   statusText.value = '正在取消…'
-  statusColor.value = 'var(--warn)'
+  statusColor.value = 'var(--win-warning)'
   printLog('\n>>> 收到取消指令，正在中断队列…', 'warn')
   try {
     await invoke('cancel_download')
@@ -510,10 +627,10 @@ function onFinished(cancelled) {
   speedUnit.value = 'B/s'
   if (cancelled) {
     statusText.value = '已取消'
-    statusColor.value = 'var(--danger)'
+    statusColor.value = 'var(--win-danger)'
   } else {
     statusText.value = '已完成'
-    statusColor.value = 'var(--success)'
+    statusColor.value = 'var(--win-success)'
   }
 }
 </script>
@@ -522,36 +639,99 @@ function onFinished(cancelled) {
 .app-root {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   min-height: 0;
   flex: 1;
   overflow: hidden;
 }
 
-/* 上方卡片固定高度, 日志卡自适应剩余空间且可收缩, 避免窗口缩小时内容溢出重叠 */
-.card:not(.log-card) {
+/* WinUI 3 应用头部品牌 */
+.win-app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.win-app-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.win-app-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--win-text-primary);
+  letter-spacing: 0.2px;
+}
+
+.win-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  background: var(--win-accent-subtle);
+  color: var(--win-accent);
+  border-radius: var(--win-radius-pill);
+  border: 1px solid rgba(96, 205, 255, 0.25);
+}
+
+/* WinUI 3 卡片基础 */
+.win-card {
+  background: var(--win-card-bg);
+  border: 1px solid var(--win-card-stroke);
+  border-radius: var(--win-radius-card);
+  box-shadow: var(--win-shadow-card);
+  backdrop-filter: blur(20px);
+  position: relative;
+  transition: border-color 0.2s;
+}
+
+.win-card:not(.win-log-card) {
   flex-shrink: 0;
 }
 
-.config-body {
-  padding: 0 18px 14px;
-}
-
-.row {
+.win-card-header {
   display: flex;
   align-items: center;
-  padding: 8px 0;
+  gap: 8px;
+  padding: 12px 16px 8px;
+  color: var(--win-text-secondary);
+}
+
+.win-section-icon {
+  color: var(--win-accent);
+  opacity: 0.9;
+}
+
+.win-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--win-text-primary);
+}
+
+.win-card-body {
+  padding: 0 16px 12px;
+}
+
+/* WinUI 3 表单行布局 */
+.win-form-row {
+  display: flex;
+  align-items: center;
+  padding: 6px 0;
   gap: 12px;
 }
 
-.row-label {
-  width: 90px;
+.win-label {
+  width: 86px;
   flex-shrink: 0;
-  font-weight: bold;
-  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--win-text-secondary);
 }
 
-.row-value {
+.win-control-wrapper {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -559,335 +739,547 @@ function onFinished(cancelled) {
   gap: 8px;
 }
 
-.row-value input[type='text'] {
+.win-path-group {
+  display: flex;
+  gap: 8px;
+}
+
+.win-path-group input {
   flex: 1;
-  min-width: 0;
 }
 
-.path-row button {
-  flex-shrink: 0;
+/* WinUI 3 TextBox 输入框 */
+.win-textbox {
+  width: 100%;
+  height: 32px;
+  background: var(--win-control-bg);
+  color: var(--win-text-primary);
+  border: 1px solid var(--win-control-stroke);
+  border-bottom: 1px solid var(--win-control-elevation);
+  border-radius: var(--win-radius-control);
+  padding: 0 10px;
+  font-family: Consolas, 'Cascadia Code', monospace;
+  font-size: 12.5px;
+  outline: none;
+  transition: all 0.15s ease;
 }
 
-/* 账户 ID 下拉框：真正的弹出列表，取代 datalist 气泡 */
-.combo {
+.win-textbox:hover:not(:disabled) {
+  background: var(--win-control-bg-hover);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.win-textbox:focus {
+  background: #1e1e1e;
+  border-color: var(--win-control-stroke);
+  border-bottom: 2px solid var(--win-accent);
+  padding-bottom: 1px;
+}
+
+.win-textbox::placeholder {
+  color: var(--win-text-tertiary);
+  font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  font-size: 12px;
+}
+
+/* WinUI 3 组合框 (ComboBox / Dropdown) */
+.win-combo {
   position: relative;
   flex: 1;
   min-width: 0;
 }
 
-.combo input[type='text'] {
-  width: 100%;
-  padding-right: 30px;
+.win-combo input {
+  padding-right: 32px;
 }
 
-.combo-toggle {
+.win-combo-toggle {
   position: absolute;
   top: 1px;
   right: 1px;
   bottom: 1px;
-  width: 28px;
+  width: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
-  color: var(--secondary);
-  border-radius: 0 8px 8px 0;
+  color: var(--win-text-secondary);
+  border: none;
+  cursor: pointer;
+  border-radius: 0 var(--win-radius-control) var(--win-radius-control) 0;
+  transition: all 0.15s ease;
 }
 
-.combo-toggle:hover {
-  background: var(--btn-ghost-hover);
-  color: var(--text);
+.win-combo-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--win-text-primary);
 }
 
-.combo-toggle.open svg {
+.win-combo-toggle.open svg {
   transform: rotate(180deg);
 }
 
-.combo-list {
+/* WinUI 3 Flyout 弹出层 */
+.win-flyout {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  z-index: 50;
-  background: var(--entry-bg);
-  border: 1px solid var(--entry-border);
-  border-radius: 8px;
+  z-index: 100;
+  background: var(--win-flyout-bg);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--win-radius-card);
+  box-shadow: var(--win-shadow-flyout);
   padding: 4px;
-  max-height: 190px;
+  max-height: 180px;
   overflow-y: auto;
+  backdrop-filter: blur(20px);
 }
 
-.combo-item {
-  padding: 7px 10px;
-  border-radius: 6px;
-  font-family: Consolas, 'Courier New', monospace;
-  font-size: 13px;
-  color: var(--text);
+.win-flyout-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--win-radius-control);
+  font-family: Consolas, 'Cascadia Code', monospace;
+  font-size: 12.5px;
+  color: var(--win-text-primary);
   cursor: pointer;
+  transition: background 0.1s;
+}
+
+.win-flyout-indicator {
+  width: 3px;
+  height: 12px;
+  background: transparent;
+  border-radius: 2px;
+  transition: background 0.15s;
+}
+
+.win-flyout-item:hover,
+.win-flyout-item.active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.win-flyout-item.active .win-flyout-indicator {
+  background: var(--win-accent);
+}
+
+.win-flyout-text {
+  flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.combo-item.active {
-  background: var(--accent);
-  color: #fff;
-}
-
-.combo-empty {
+.win-flyout-empty {
   padding: 8px 10px;
   font-size: 12px;
-  color: var(--secondary);
+  color: var(--win-text-tertiary);
+  text-align: center;
 }
 
-.date-row {
+/* WinUI 3 日期选择器组 */
+.win-date-container {
+  display: flex;
+  align-items: center;
   flex-wrap: wrap;
-  row-gap: 8px;
   gap: 8px;
 }
 
-/* 起止日期分组，各自成框，避免 6 个下拉框挤在一起 */
-.date-group {
+.win-date-picker-group {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 2px 6px 2px 4px;
-  background: var(--entry-bg);
-  border: 1px solid var(--entry-border);
-  border-radius: 8px;
+  background: var(--win-control-bg);
+  border: 1px solid var(--win-control-stroke);
+  border-bottom: 1px solid var(--win-control-elevation);
+  border-radius: var(--win-radius-control);
+  padding: 1px 4px;
 }
 
-.date-group select {
-  width: 56px;
-  padding: 5px 2px;
-  text-align: center;
-  font-family: 'Microsoft YaHei', sans-serif;
+.win-date-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--win-text-secondary);
+  padding: 0 4px;
+}
+
+.win-date-separator {
+  font-size: 12px;
+  color: var(--win-text-secondary);
+}
+
+/* WinUI 3 下拉 Select */
+.win-select {
+  height: 28px;
   background: transparent;
+  color: var(--win-text-primary);
   border: none;
-}
-
-.date-group select:hover:not(:disabled) {
-  background: var(--btn-ghost-hover);
-  border-radius: 5px;
-}
-
-.date-tag {
+  outline: none;
   font-size: 12px;
-  color: var(--secondary);
-  margin-right: 2px;
+  font-family: inherit;
+  padding: 0 4px;
+  cursor: pointer;
 }
 
-.date-sep {
-  font-size: 12px;
-  color: var(--secondary);
+.win-select option {
+  background: #2a2a2a;
+  color: #fff;
 }
 
-.limit-check {
+.win-select:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+}
+
+.win-select:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.win-concurrency-select {
+  height: 32px;
+  width: 58px;
+  background: var(--win-control-bg);
+  border: 1px solid var(--win-control-stroke);
+  border-bottom: 1px solid var(--win-control-elevation);
+  border-radius: var(--win-radius-control);
+  text-align: center;
+}
+
+/* WinUI 3 Checkbox */
+.win-checkbox {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
+  gap: 7px;
   cursor: pointer;
   margin-left: 8px;
-  color: var(--text);
   user-select: none;
 }
 
-.limit-check input {
-  accent-color: var(--accent);
-  width: 15px;
-  height: 15px;
-  cursor: pointer;
+.win-checkbox input {
+  display: none;
 }
 
-/* 操作区 */
-.action-bar {
+.win-checkbox-box {
+  width: 18px;
+  height: 18px;
+  background: var(--win-control-bg);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: var(--win-radius-control);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.win-checkbox:hover .win-checkbox-box {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.win-checkbox input:checked + .win-checkbox-box {
+  background: var(--win-accent);
+  border-color: var(--win-accent);
+}
+
+.win-checkbox-label {
+  font-size: 12px;
+  color: var(--win-text-primary);
+}
+
+/* WinUI 3 按钮规范 */
+.win-btn {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--win-radius-control);
+  cursor: pointer;
+  transition: all 0.1s cubic-bezier(0, 0, 0, 1);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.win-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.win-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+/* Standard Button */
+.win-btn-standard {
+  background: var(--win-control-bg);
+  border: 1px solid var(--win-control-stroke);
+  border-bottom: 1px solid var(--win-control-elevation);
+  color: var(--win-text-primary);
+}
+
+.win-btn-standard:hover:not(:disabled) {
+  background: var(--win-control-bg-hover);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.win-btn-sm {
+  height: 26px;
+  padding: 0 10px;
+  font-size: 11.5px;
+}
+
+/* Accent Button (Windows 11 经典亮色主按键) */
+.win-btn-accent {
+  background: var(--win-accent);
+  color: var(--win-accent-text);
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+.win-btn-accent:hover:not(:disabled) {
+  background: var(--win-accent-hover);
+}
+
+.win-btn-accent:active:not(:disabled) {
+  background: var(--win-accent-active);
+}
+
+/* Destructive / Danger Button */
+.win-btn-danger {
+  background: var(--win-danger-bg);
+  border: 1px solid var(--win-danger-stroke);
+  color: var(--win-danger);
+  font-weight: 600;
+}
+
+.win-btn-danger:hover:not(:disabled) {
+  background: rgba(255, 107, 107, 0.22);
+  border-color: var(--win-danger);
+}
+
+/* 操作栏容器 */
+.win-action-bar {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 16px 18px 12px;
+  padding: 12px 16px;
   flex-wrap: wrap;
-  row-gap: 10px;
 }
 
-.action-label {
-  font-weight: bold;
-  margin-left: 4px;
+.win-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 4px;
 }
 
-.segment {
-  display: flex;
-  background: var(--btn-ghost-bg);
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.segment-btn {
-  background: var(--card-bg);
-  color: var(--text);
+.win-section-label {
   font-size: 12px;
-  font-weight: normal;
-  padding: 7px 12px;
-  border-radius: 0;
+  font-weight: 600;
+  color: var(--win-text-secondary);
 }
 
-.segment-btn:first-child {
-  border-radius: 10px 0 0 10px;
+/* WinUI 3 SegmentedControl (分段切换器) */
+.win-segmented {
+  display: flex;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 2px;
 }
 
-.segment-btn:last-child {
-  border-radius: 0 10px 10px 0;
+.win-segmented-item {
+  background: transparent;
+  color: var(--win-text-secondary);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.segment-btn.active {
-  background: var(--accent);
+.win-segmented-item:hover:not(.active) {
+  color: var(--win-text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.win-segmented-item.active {
+  background: rgba(255, 255, 255, 0.1);
   color: #fff;
-  font-weight: bold;
+  font-weight: 600;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.segment-btn:not(.active):hover {
-  background: var(--btn-ghost-hover);
+/* WinUI 3 细长平滑进度条 */
+.win-progress-section {
+  padding: 0 16px 10px;
 }
 
-.concurrency-select {
-  width: 64px;
-  padding: 6px;
-  font-family: 'Microsoft YaHei', sans-serif;
-}
-
-.status {
-  margin-left: auto;
-  font-size: 12px;
-  font-weight: bold;
-  color: var(--secondary);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.progress-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 18px 14px;
-}
-
-.progress-track {
-  flex: 1;
-  height: 10px;
-  background: var(--strip-inactive);
-  border-radius: 5px;
+.win-progress-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
   overflow: hidden;
 }
 
-.progress-fill {
+.win-progress-fill {
   height: 100%;
-  background: var(--accent);
-  border-radius: 5px;
+  background: var(--win-accent);
+  border-radius: 2px;
   transition: width 0.25s ease;
 }
 
-.progress-text {
-  font-weight: bold;
-  color: var(--secondary);
-  white-space: nowrap;
+.win-progress-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
 }
 
-.stats-grid {
+.win-progress-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--win-text-secondary);
+}
+
+/* WinUI 3 InfoBadge 状态标识 */
+.win-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: var(--win-radius-pill);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.win-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.win-status-text {
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+/* 统计卡片网格 (WinUI 3 Tile 风格) */
+.win-stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  padding: 0 18px 16px;
+  gap: 8px;
+  padding: 0 16px 14px;
 }
 
-.stat {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+.win-stat-tile {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 8px 10px;
+  position: relative;
   overflow: hidden;
   text-align: center;
 }
 
-.stat-strip {
-  height: 4px;
+.win-stat-accent-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
 }
 
-.stat-value {
-  font-size: 23px;
-  font-weight: bold;
-  margin-top: 5px;
-  line-height: 1.3;
+.win-stat-main {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 2px;
 }
 
-.stat-unit {
+.win-stat-number {
+  font-size: 20px;
+  font-weight: 600;
+  font-family: 'Segoe UI Variable Display', sans-serif;
+  line-height: 1.2;
+}
+
+.win-stat-unit {
   font-size: 10px;
-  color: var(--secondary);
-  line-height: 1.3;
+  color: var(--win-text-secondary);
 }
 
-.stat-label {
+.win-stat-title {
   font-size: 11px;
-  color: var(--secondary);
-  padding-bottom: 9px;
+  color: var(--win-text-secondary);
+  margin-top: 3px;
 }
 
-/* 日志区 */
-.log-card {
+/* 运行日志卡片 */
+.win-log-card {
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 180px;
+  min-height: 160px;
 }
 
-.log-head {
+.win-log-header {
   display: flex;
   align-items: center;
-  padding: 14px 18px 8px;
+  justify-content: space-between;
+  padding: 10px 16px 8px;
 }
 
-.log-title {
-  font-size: 13px;
-  font-weight: bold;
-  color: var(--secondary);
+.win-log-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.log-actions {
-  margin-left: auto;
+.win-log-actions {
   display: flex;
   gap: 6px;
 }
 
-.log-actions button {
-  padding: 5px 12px;
-  font-size: 12px;
-  border-radius: 10px;
-}
-
-.log-area {
+.win-log-terminal {
   flex: 1;
-  margin: 0 18px 16px;
-  background: var(--log-bg);
-  border-radius: 10px;
-  padding: 10px 12px;
+  margin: 0 16px 12px;
+  background: var(--win-log-bg);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--win-radius-control);
+  padding: 8px 12px;
   overflow-y: auto;
-  font-family: Consolas, 'Courier New', monospace;
-  font-size: 13px;
+  font-family: Consolas, 'Cascadia Code', monospace;
+  font-size: 12px;
   white-space: pre-wrap;
   word-break: break-all;
 }
 
-.log-line {
-  line-height: 1.7;
+.win-log-line {
+  line-height: 1.6;
 }
 
-.log-ts {
-  color: var(--secondary);
+.win-log-ts {
+  color: var(--win-text-tertiary);
   margin-right: 8px;
 }
 
-.log-success { color: #00ba7c; }
-.log-skip { color: #ffd400; }
-.log-error { color: #ff6b8a; }
-.log-warn { color: #ffd400; }
-.log-info { color: #8b98a5; }
-.log-normal { color: #d4d4d4; }
+.win-log-success { color: var(--win-success); }
+.win-log-skip { color: var(--win-warning); }
+.win-log-error { color: var(--win-danger); }
+.win-log-warn { color: var(--win-warning); }
+.win-log-info { color: #8ab4f8; }
+.win-log-normal { color: var(--win-text-primary); }
 </style>
