@@ -70,10 +70,14 @@ html,
 body,
 #app {
   height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
 body {
-  background: var(--fluent-bg-canvas-gradient);
+  background: var(--fluent-bg-canvas);
   color: var(--fluent-text-primary);
   font-family: 'Segoe UI Variable Text', 'Segoe UI Variable', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Microsoft YaHei UI', 'Microsoft YaHei', sans-serif;
   font-size: 13px;
@@ -86,8 +90,114 @@ body {
 #app {
   display: flex;
   flex-direction: column;
-  padding: 12px 14px 14px;
-  gap: 10px;
+}
+
+/* Fluent 2 无边框窗口外壳容器 */
+.window-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background: var(--fluent-bg-canvas-gradient);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.window-shell.is-maximized {
+  border: none;
+  border-radius: 0;
+}
+
+/* Fluent 2 自定义原生感标题栏 */
+.fluent-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 34px;
+  min-height: 34px;
+  padding-left: 12px;
+  padding-right: 0;
+  user-select: none;
+  -webkit-app-region: drag;
+  cursor: default;
+  background: rgba(32, 32, 32, 0.65);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.fluent-titlebar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  -webkit-app-region: drag;
+}
+
+.fluent-titlebar-app-icon {
+  display: flex;
+  align-items: center;
+  color: var(--fluent-accent);
+  -webkit-app-region: drag;
+}
+
+.fluent-titlebar-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fluent-text-primary);
+  letter-spacing: 0.2px;
+  -webkit-app-region: drag;
+}
+
+.fluent-titlebar-badge {
+  font-size: 10px;
+  color: var(--fluent-text-tertiary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: Consolas, 'Cascadia Code', monospace;
+  -webkit-app-region: drag;
+}
+
+.fluent-titlebar-controls {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  -webkit-app-region: no-drag;
+}
+
+.fluent-caption-btn {
+  width: 46px;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fluent-text-secondary);
+  transition: background-color 0.1s ease, color 0.1s ease;
+  cursor: default;
+  -webkit-app-region: no-drag;
+}
+
+.fluent-caption-btn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--fluent-text-primary);
+}
+
+.fluent-caption-btn:active {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.fluent-caption-btn.fluent-close-btn:hover {
+  background-color: #c42b1c;
+  color: #ffffff;
+}
+
+.fluent-caption-btn.fluent-close-btn:active {
+  background-color: #b32719;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 /* Fluent 2 Thin Scrollbar */

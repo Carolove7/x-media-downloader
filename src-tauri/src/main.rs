@@ -1170,6 +1170,34 @@ fn open_folder(path: String) -> Result<(), String> {
     }
 }
 
+// ----------------- 自定义无边框窗口控制 -----------------
+
+#[tauri::command]
+fn win_minimize(window: tauri::WebviewWindow) {
+    let _ = window.minimize();
+}
+
+#[tauri::command]
+fn win_toggle_maximize(window: tauri::WebviewWindow) -> bool {
+    if window.is_maximized().unwrap_or(false) {
+        let _ = window.unmaximize();
+        false
+    } else {
+        let _ = window.maximize();
+        true
+    }
+}
+
+#[tauri::command]
+fn win_close(window: tauri::WebviewWindow) {
+    let _ = window.close();
+}
+
+#[tauri::command]
+fn win_is_maximized(window: tauri::WebviewWindow) -> bool {
+    window.is_maximized().unwrap_or(false)
+}
+
 // ----------------- CLI 自检模式（对应 Python 版 --selftest） -----------------
 // 用法: x-media-downloader.exe --selftest
 // 结果写入 exe 同目录 selftest_result.txt（release 版无控制台，凭文件核对）。
@@ -1388,7 +1416,11 @@ fn main() {
             cancel_download,
             browse_folder,
             open_folder,
-            show_message
+            show_message,
+            win_minimize,
+            win_toggle_maximize,
+            win_close,
+            win_is_maximized
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

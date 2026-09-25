@@ -1,7 +1,61 @@
 <template>
-  <div class="app-root">
-    <!-- 卡片 1：账户设置 (Fluent 2 SettingsCard 风格) -->
-    <section class="fluent-card">
+  <div class="window-shell" :class="{ 'is-maximized': isMaximized }">
+    <!-- Fluent 2 自定义无边框窗口标题栏 -->
+    <header class="fluent-titlebar" data-tauri-drag-region @dblclick="toggleMaximize">
+      <div class="fluent-titlebar-left" data-tauri-drag-region>
+        <div class="fluent-titlebar-app-icon" data-tauri-drag-region>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+        </div>
+        <span class="fluent-titlebar-title" data-tauri-drag-region>X 媒体下载器</span>
+        <span class="fluent-titlebar-badge" data-tauri-drag-region>v1.1.0-pre</span>
+      </div>
+
+      <div class="fluent-titlebar-controls">
+        <button
+          type="button"
+          class="fluent-caption-btn"
+          title="最小化"
+          aria-label="最小化"
+          @click="minimizeWindow"
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <path d="M0 5h10" stroke="currentColor" stroke-width="1"/>
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="fluent-caption-btn"
+          :title="isMaximized ? '向下还原' : '最大化'"
+          :aria-label="isMaximized ? '向下还原' : '最大化'"
+          @click="toggleMaximize"
+        >
+          <svg v-if="isMaximized" width="10" height="10" viewBox="0 0 10 10">
+            <path d="M2.5 0.5h7v7h-7z" fill="none" stroke="currentColor" stroke-width="1"/>
+            <path d="M0.5 2.5v7h7v-7h-7z" fill="none" stroke="currentColor" stroke-width="1"/>
+          </svg>
+          <svg v-else width="10" height="10" viewBox="0 0 10 10">
+            <rect x="0.5" y="0.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1"/>
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="fluent-caption-btn fluent-close-btn"
+          title="关闭"
+          aria-label="关闭"
+          @click="closeWindow"
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <path d="M1 1l8 8m0-8L1 9" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="app-root">
+      <!-- 卡片 1：账户设置 (Fluent 2 SettingsCard 风格) -->
+      <section class="fluent-card">
       <div class="fluent-card-header">
         <div class="fluent-header-content">
           <div class="fluent-title-wrap">
@@ -339,12 +393,48 @@
       </div>
     </section>
   </div>
+</div>
 </template>
 
 <script setup>
 import { reactive, ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
+
+// ---------------- 自定义无边框窗口控制 ----------------
+const isMaximized = ref(false)
+
+async function checkMaximized() {
+  try {
+    isMaximized.value = await invoke('win_is_maximized')
+  } catch (e) {
+    console.error('Failed to check window maximized state:', e)
+  }
+}
+
+async function minimizeWindow() {
+  try {
+    await invoke('win_minimize')
+  } catch (e) {
+    console.error('Failed to minimize window:', e)
+  }
+}
+
+async function toggleMaximize() {
+  try {
+    isMaximized.value = await invoke('win_toggle_maximize')
+  } catch (e) {
+    console.error('Failed to toggle maximize window:', e)
+  }
+}
+
+async function closeWindow() {
+  try {
+    await invoke('win_close')
+  } catch (e) {
+    console.error('Failed to close window:', e)
+  }
+}
 
 // ---------------- 核心响应式状态 ----------------
 const user_id = ref('ekin9527')
@@ -582,12 +672,15 @@ onMounted(async () => {
 
   window.addEventListener('keydown', onKeydown)
   document.addEventListener('mousedown', onDocumentMouseDown)
+  checkMaximized()
+  window.addEventListener('resize', checkMaximized)
 })
 
 onUnmounted(() => {
   unlisteners.forEach((fn) => fn())
   window.removeEventListener('keydown', onKeydown)
   document.removeEventListener('mousedown', onDocumentMouseDown)
+  window.removeEventListener('resize', checkMaximized)
 })
 
 function onKeydown(ev) {
@@ -710,6 +803,7 @@ function onFinished(cancelled) {
   min-height: 0;
   flex: 1;
   overflow: hidden;
+  padding: 10px 14px 14px;
 }
 
 /* Fluent 2 亚克力 / 云母微光卡片 */
