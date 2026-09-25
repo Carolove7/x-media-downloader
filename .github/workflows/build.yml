@@ -64,7 +64,7 @@ jobs:
         with:
           tagName: ${{ steps.release_info.outputs.tag_name }}
           releaseName: ${{ steps.release_info.outputs.tag_name != '' && format('X Media Downloader {0}', steps.release_info.outputs.tag_name) || '' }}
-          releaseBody: ${{ steps.release_info.outputs.is_prerelease == 'true' && '### X Media Downloader WinUI 3 现代质感预览版 (Pre-release)&#10;- UI 全面采用 WinUI 3 (Windows 11 Fluent Design) 设计规范&#10;- 统计卡片与设置列表融入硬件信息磁贴与细致分层质感&#10;- 后端下载与 GraphQL 逻辑完全保持不变' || 'GitHub Actions 自动构建的 Windows x64 安装包。' }}
+          releaseBody: ${{ steps.release_info.outputs.is_prerelease == 'true' && '### X Media Downloader Fluent Design 预览版 (Pre-release)&#10;- 采用 Fluent Design 2 (Windows 11) 规范设计与沉浸式无边框窗口&#10;- 包含自定义标题栏原生交互、亚克力微光卡片与硬件信息磁贴质感&#10;- 后端下载与 GraphQL 逻辑完全保持稳定不变' || 'GitHub Actions 自动构建的 Windows x64 安装包。' }}
           releaseDraft: false
           prerelease: ${{ steps.release_info.outputs.is_prerelease == 'true' }}
 
@@ -72,6 +72,6 @@ jobs:
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.ref == 'refs/heads/dev' && 'xmd-winui3-prerelease-build' || 'x-media-downloader-build' }}
+          name: ${{ github.ref == 'refs/heads/dev' && 'xmd-fluent-prerelease-build' || 'x-media-downloader-build' }}
           path: src-tauri/target/release/bundle/**/*
           if-no-files-found: warn
