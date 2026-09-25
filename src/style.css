@@ -1,13 +1,13 @@
 /* Microsoft Fluent Design System 2 (Windows 11) - Official Dark Theme Tokens */
 :root {
   /* Surfaces & Materials (Mica & Acrylic Layers) */
-  --fluent-bg-canvas: #202020;
-  --fluent-bg-canvas-gradient: radial-gradient(circle at 50% 0%, rgba(96, 205, 255, 0.04), transparent 70%), #202020;
+  --fluent-bg-canvas: #1e1e1e;
+  --fluent-bg-canvas-gradient: radial-gradient(120% 80% at 50% -10%, rgba(96, 205, 255, 0.04), transparent 65%), #1e1e1e;
   
-  --fluent-card-bg: rgba(255, 255, 255, 0.045);
+  --fluent-card-bg: rgba(255, 255, 255, 0.042);
   --fluent-card-bg-elevated: rgba(255, 255, 255, 0.07);
-  --fluent-card-stroke: rgba(255, 255, 255, 0.08);
-  --fluent-card-stroke-highlight: rgba(255, 255, 255, 0.14);
+  --fluent-card-stroke: rgba(255, 255, 255, 0.075);
+  --fluent-card-stroke-highlight: rgba(255, 255, 255, 0.15);
   
   --fluent-row-bg: rgba(255, 255, 255, 0.02);
   --fluent-row-hover: rgba(255, 255, 255, 0.045);
@@ -15,18 +15,18 @@
   --fluent-control-bg: rgba(255, 255, 255, 0.055);
   --fluent-control-bg-hover: rgba(255, 255, 255, 0.085);
   --fluent-control-bg-active: rgba(255, 255, 255, 0.035);
-  --fluent-control-bg-focus: #1b1b1b;
+  --fluent-control-bg-focus: #181818;
   --fluent-control-stroke: rgba(255, 255, 255, 0.08);
-  --fluent-control-elevation: rgba(255, 255, 255, 0.35);
+  --fluent-control-elevation: rgba(255, 255, 255, 0.28);
 
-  --fluent-flyout-bg: #2c2c2c;
-  --fluent-log-bg: #181818;
+  --fluent-flyout-bg: #292929;
+  --fluent-log-bg: #161616;
 
   /* Typography Colors (Fluent Text Hierarchy) */
   --fluent-text-primary: rgba(255, 255, 255, 0.95);
-  --fluent-text-secondary: rgba(255, 255, 255, 0.62);
-  --fluent-text-tertiary: rgba(255, 255, 255, 0.42);
-  --fluent-text-disabled: rgba(255, 255, 255, 0.32);
+  --fluent-text-secondary: rgba(255, 255, 255, 0.65);
+  --fluent-text-tertiary: rgba(255, 255, 255, 0.44);
+  --fluent-text-disabled: rgba(255, 255, 255, 0.3);
 
   /* Fluent Accent Palette (Windows 11 System Accent Light 2) */
   --fluent-accent: #60cdff;
@@ -38,10 +38,10 @@
 
   /* Status Colors */
   --fluent-success: #6ccb5f;
-  --fluent-success-subtle: rgba(108, 203, 95, 0.12);
+  --fluent-success-subtle: rgba(108, 203, 95, 0.14);
   
   --fluent-warning: #fce100;
-  --fluent-warning-subtle: rgba(252, 225, 0, 0.12);
+  --fluent-warning-subtle: rgba(252, 225, 0, 0.14);
   
   --fluent-danger: #ff6b6b;
   --fluent-danger-bg: rgba(255, 107, 107, 0.12);
@@ -55,8 +55,8 @@
   --fluent-radius-pill: 20px;
 
   /* Elevations & Shadows */
-  --fluent-shadow-card: inset 0 1px 0 0 rgba(255, 255, 255, 0.06), 0 2px 14px rgba(0, 0, 0, 0.25);
-  --fluent-shadow-flyout: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --fluent-shadow-card: inset 0 1px 0 0 rgba(255, 255, 255, 0.07), 0 2px 14px rgba(0, 0, 0, 0.28);
+  --fluent-shadow-flyout: 0 8px 32px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.3);
   --fluent-shadow-control: 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
@@ -99,15 +99,17 @@ body {
   height: 100%;
   width: 100%;
   background: var(--fluent-bg-canvas-gradient);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   overflow: hidden;
   box-sizing: border-box;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
 .window-shell.is-maximized {
   border: none;
   border-radius: 0;
+  box-shadow: none;
 }
 
 /* Fluent 2 自定义原生感标题栏 */
@@ -122,8 +124,9 @@ body {
   user-select: none;
   -webkit-app-region: drag;
   cursor: default;
-  background: rgba(32, 32, 32, 0.65);
+  background: rgba(28, 28, 28, 0.85);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
 }
 
 .fluent-titlebar-left {
@@ -137,25 +140,20 @@ body {
   display: flex;
   align-items: center;
   color: var(--fluent-accent);
-  -webkit-app-region: drag;
-}
-
-.fluent-titlebar-title {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--fluent-text-primary);
-  letter-spacing: 0.2px;
+  opacity: 0.95;
   -webkit-app-region: drag;
 }
 
 .fluent-titlebar-badge {
-  font-size: 10px;
-  color: var(--fluent-text-tertiary);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--fluent-text-secondary);
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 1px 6px;
+  padding: 1.5px 7px;
   border-radius: 4px;
-  font-family: Consolas, 'Cascadia Code', monospace;
+  font-family: 'Segoe UI Variable Text', -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: 0.2px;
   -webkit-app-region: drag;
 }
 

@@ -4,11 +4,10 @@
     <header class="fluent-titlebar" data-tauri-drag-region @dblclick="toggleMaximize">
       <div class="fluent-titlebar-left" data-tauri-drag-region>
         <div class="fluent-titlebar-app-icon" data-tauri-drag-region>
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
           </svg>
         </div>
-        <span class="fluent-titlebar-title" data-tauri-drag-region>X 媒体下载器</span>
         <span class="fluent-titlebar-badge" data-tauri-drag-region>v1.1.0-pre</span>
       </div>
 
@@ -799,11 +798,11 @@ function onFinished(cancelled) {
 .app-root {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   min-height: 0;
   flex: 1;
   overflow: hidden;
-  padding: 10px 14px 14px;
+  padding: 8px 12px 12px;
 }
 
 /* Fluent 2 亚克力 / 云母微光卡片 */
@@ -830,7 +829,7 @@ function onFinished(cancelled) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px 6px;
+  padding: 8px 14px 4px;
 }
 
 .fluent-header-content {
@@ -851,7 +850,7 @@ function onFinished(cancelled) {
 }
 
 .fluent-card-title {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--fluent-text-primary);
   letter-spacing: 0.1px;
@@ -863,16 +862,16 @@ function onFinished(cancelled) {
 }
 
 .fluent-card-body {
-  padding: 2px 10px 8px;
+  padding: 2px 8px 6px;
 }
 
 /* Fluent 2 设置项行 (SettingsCard 风格) */
 .fluent-row {
   display: flex;
   align-items: center;
-  padding: 5px 10px;
+  padding: 4px 8px;
   border-radius: var(--fluent-radius-control);
-  gap: 12px;
+  gap: 10px;
   transition: background 0.12s ease;
 }
 
@@ -885,7 +884,7 @@ function onFinished(cancelled) {
 }
 
 .fluent-row-label {
-  width: 96px;
+  width: 92px;
   flex-shrink: 0;
   font-size: 12px;
   font-weight: 500;
@@ -920,17 +919,17 @@ function onFinished(cancelled) {
 /* Fluent 2 TextBox 输入框 */
 .fluent-textbox {
   width: 100%;
-  height: 31px;
+  height: 30px;
   background: var(--fluent-control-bg);
   color: var(--fluent-text-primary);
   border: 1px solid var(--fluent-control-stroke);
   border-bottom: 1px solid var(--fluent-control-elevation);
   border-radius: var(--fluent-radius-control);
   padding: 0 10px;
-  font-family: Consolas, 'Cascadia Code', monospace;
+  font-family: 'Cascadia Code', Consolas, monospace;
   font-size: 12px;
   outline: none;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
   box-shadow: var(--fluent-shadow-control);
 }
 
@@ -941,14 +940,14 @@ function onFinished(cancelled) {
 
 .fluent-textbox:focus {
   background: var(--fluent-control-bg-focus);
-  border-color: var(--fluent-control-stroke);
+  border-color: rgba(255, 255, 255, 0.1);
   border-bottom: 2px solid var(--fluent-accent);
-  padding-bottom: 1px;
+  box-shadow: 0 0 0 1px rgba(96, 205, 255, 0.15);
 }
 
 .fluent-textbox::placeholder {
   color: var(--fluent-text-tertiary);
-  font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  font-family: 'Segoe UI Variable Text', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 11.5px;
 }
 
@@ -977,7 +976,7 @@ function onFinished(cancelled) {
   border: none;
   cursor: pointer;
   border-radius: 0 var(--fluent-radius-control) var(--fluent-radius-control) 0;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
 }
 
 .fluent-combo-button:hover {
@@ -1010,9 +1009,9 @@ function onFinished(cancelled) {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px;
+  padding: 5px 8px;
   border-radius: var(--fluent-radius-control);
-  font-family: Consolas, 'Cascadia Code', monospace;
+  font-family: 'Cascadia Code', Consolas, monospace;
   font-size: 12px;
   color: var(--fluent-text-primary);
   cursor: pointer;
@@ -1082,19 +1081,19 @@ function onFinished(cancelled) {
 }
 
 .fluent-select {
-  height: 28px;
+  height: 27px;
   background: transparent;
   color: var(--fluent-text-primary);
   border: none;
   outline: none;
-  font-size: 12px;
+  font-size: 11.5px;
   font-family: inherit;
   padding: 0 4px;
   cursor: pointer;
 }
 
 .fluent-select option {
-  background: #282828;
+  background: #252525;
   color: #fff;
 }
 
@@ -1109,7 +1108,7 @@ function onFinished(cancelled) {
 }
 
 .fluent-concurrency-select {
-  height: 31px;
+  height: 30px;
   width: 58px;
   background: var(--fluent-control-bg);
   border: 1px solid var(--fluent-control-stroke);
@@ -1133,20 +1132,20 @@ function onFinished(cancelled) {
 }
 
 .fluent-checkbox-box {
-  width: 18px;
-  height: 18px;
+  width: 17px;
+  height: 17px;
   background: var(--fluent-control-bg);
-  border: 1px solid rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: var(--fluent-radius-control);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
 }
 
 .fluent-checkbox:hover .fluent-checkbox-box {
   background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.65);
+  border-color: rgba(255, 255, 255, 0.6);
 }
 
 .fluent-checkbox input:checked + .fluent-checkbox-box {
@@ -1161,8 +1160,8 @@ function onFinished(cancelled) {
 
 /* Fluent 2 按键系统 */
 .fluent-btn {
-  height: 31px;
-  padding: 0 13px;
+  height: 30px;
+  padding: 0 12px;
   font-size: 12px;
   font-weight: 500;
   display: inline-flex;
@@ -1199,27 +1198,28 @@ function onFinished(cancelled) {
 }
 
 .fluent-btn-sm {
-  height: 26px;
-  padding: 0 10px;
-  font-size: 11.5px;
+  height: 25px;
+  padding: 0 9px;
+  font-size: 11px;
 }
 
 /* Accent Button (Windows 11 经典亮色主操作) */
 .fluent-btn-accent {
-  background: var(--fluent-accent);
+  background: linear-gradient(180deg, #60cdff 0%, #3bb8fa 100%);
   color: var(--fluent-accent-text);
   font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.4);
-  box-shadow: 0 2px 8px rgba(96, 205, 255, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.35);
+  box-shadow: 0 2px 8px rgba(96, 205, 255, 0.3);
 }
 
 .fluent-btn-accent:hover:not(:disabled) {
-  background: var(--fluent-accent-hover);
+  background: linear-gradient(180deg, #7ad5ff 0%, #4ec1fc 100%);
+  box-shadow: 0 3px 12px rgba(96, 205, 255, 0.42);
 }
 
 .fluent-btn-accent:active:not(:disabled) {
-  background: var(--fluent-accent-active);
+  background: #38b4f7;
 }
 
 /* Destructive / Danger Button */
@@ -1240,7 +1240,7 @@ function onFinished(cancelled) {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 14px 10px;
+  padding: 10px 14px 8px;
   flex-wrap: wrap;
 }
 
@@ -1248,7 +1248,7 @@ function onFinished(cancelled) {
   width: 1px;
   height: 18px;
   background: rgba(255, 255, 255, 0.1);
-  margin: 0 3px;
+  margin: 0 2px;
 }
 
 .fluent-inline-label {
@@ -1270,11 +1270,11 @@ function onFinished(cancelled) {
   background: transparent;
   color: var(--fluent-text-secondary);
   border: 1px solid transparent;
-  border-radius: 4px;
-  padding: 4px 10px;
+  border-radius: 3px;
+  padding: 3px 9px;
   font-size: 11.5px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
 }
 
 .fluent-segmented-item:hover:not(.active) {
@@ -1292,12 +1292,12 @@ function onFinished(cancelled) {
 
 /* Fluent 2 细条平滑进度条 */
 .fluent-progress-section {
-  padding: 0 14px 10px;
+  padding: 0 14px 8px;
 }
 
 .fluent-progress-track {
   width: 100%;
-  height: 4px;
+  height: 3px;
   background: rgba(255, 255, 255, 0.08);
   border-radius: 2px;
   overflow: hidden;
@@ -1305,9 +1305,10 @@ function onFinished(cancelled) {
 
 .fluent-progress-fill {
   height: 100%;
-  background: var(--fluent-accent);
+  background: linear-gradient(90deg, #4cc2f7, #60cdff);
   border-radius: 2px;
   transition: width 0.25s ease;
+  box-shadow: 0 0 6px rgba(96, 205, 255, 0.4);
 }
 
 .fluent-progress-info {
@@ -1350,14 +1351,14 @@ function onFinished(cancelled) {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-  padding: 0 14px 12px;
+  padding: 0 12px 10px;
 }
 
 .fluent-stat-tile {
   background: rgba(255, 255, 255, 0.035);
   border: 1px solid rgba(255, 255, 255, 0.065);
   border-radius: var(--fluent-radius-tile);
-  padding: 8px 10px;
+  padding: 7px 10px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1365,14 +1366,14 @@ function onFinished(cancelled) {
 }
 
 .fluent-stat-tile:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(255, 255, 255, 0.12);
   transform: translateY(-1px);
 }
 
 .fluent-stat-icon-box {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   flex-shrink: 0;
   border-radius: var(--fluent-radius-control);
   display: flex;
@@ -1398,34 +1399,37 @@ function onFinished(cancelled) {
 .fluent-stat-val-row {
   display: flex;
   align-items: baseline;
-  gap: 4px;
+  gap: 3px;
 }
 
 .fluent-stat-value {
-  font-size: 18px;
-  font-weight: 600;
-  font-family: 'Segoe UI Variable Display', 'Segoe UI', sans-serif;
-  line-height: 1.2;
+  font-size: 19px;
+  font-weight: 700;
+  font-family: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+  line-height: 1.15;
+  letter-spacing: -0.3px;
 }
 
 .fluent-stat-unit {
-  font-size: 10px;
+  font-size: 10.5px;
+  font-weight: 500;
   color: var(--fluent-text-secondary);
 }
 
-/* 运行日志卡片 (Fluent 2 Terminal 风格) */
+/* 运行日志卡片 (Fluent 2 Terminal 风格 - 紧凑缩短) */
 .fluent-log-card {
-  flex: 1;
+  flex: 0 0 auto;
+  max-height: 180px;
+  min-height: 130px;
   display: flex;
   flex-direction: column;
-  min-height: 160px;
 }
 
 .fluent-log-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px 8px;
+  padding: 7px 14px 4px;
 }
 
 .fluent-log-actions {
@@ -1434,26 +1438,27 @@ function onFinished(cancelled) {
 }
 
 .fluent-log-terminal {
-  flex: 1;
-  margin: 0 14px 10px;
+  height: 105px;
+  margin: 0 12px 10px;
   background: var(--fluent-log-bg);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--fluent-radius-control);
-  padding: 8px 12px;
+  padding: 6px 10px;
   overflow-y: auto;
-  font-family: Consolas, 'Cascadia Code', monospace;
-  font-size: 12px;
+  font-family: 'Cascadia Code', Consolas, monospace;
+  font-size: 11.5px;
   white-space: pre-wrap;
   word-break: break-all;
 }
 
 .fluent-log-line {
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
 .fluent-log-ts {
   color: var(--fluent-text-tertiary);
   margin-right: 8px;
+  font-size: 11px;
 }
 
 .fluent-log-success { color: var(--fluent-success); }

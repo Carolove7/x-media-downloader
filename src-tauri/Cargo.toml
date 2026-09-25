@@ -1,6 +1,6 @@
 [package]
 name = "x-media-downloader"
-version = "1.0.0"
+version = "1.1.0"
 description = "X媒体下载器 - Tauri/Rust 版"
 edition = "2021"
 
