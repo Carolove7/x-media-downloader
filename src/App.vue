@@ -1,10 +1,10 @@
 <template>
   <div class="app-root">
-    <!-- WinUI 3 应用标题栏区域 -->
+    <!-- WinUI 3 顶部应用标题栏 -->
     <header class="win-app-header">
       <div class="win-app-brand">
         <svg class="win-app-icon" viewBox="0 0 24 24" width="18" height="18" fill="none">
-          <rect width="24" height="24" rx="5" fill="#60cdff" fill-opacity="0.16" />
+          <rect width="24" height="24" rx="6" fill="#60cdff" fill-opacity="0.16" />
           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill="#60cdff"/>
         </svg>
         <span class="win-app-title">X 媒体下载器</span>
@@ -12,13 +12,18 @@
       </div>
     </header>
 
-    <!-- 账户设置卡片 -->
+    <!-- 卡片 1：账户与下载设置 (WinUI 3 现代质感卡片) -->
     <section class="win-card">
       <div class="win-card-header">
-        <svg class="win-section-icon" viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
-          <path d="M10 2a4 4 0 100 8 4 4 0 000-8zm-2 4a2 2 0 114 0 2 2 0 01-4 0zm-4 9a4 4 0 014-4h4a4 4 0 014 4v1H4v-1zm2 0a2 2 0 012-2h4a2 2 0 012 2v0H6v0z"/>
-        </svg>
-        <span class="win-card-title">账户设置</span>
+        <div class="win-header-left">
+          <div class="win-card-title-row">
+            <svg class="win-section-icon" viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
+              <path d="M10 2a4 4 0 100 8 4 4 0 000-8zm-2 4a2 2 0 114 0 2 2 0 01-4 0zm-4 9a4 4 0 014-4h4a4 4 0 014 4v1H4v-1zm2 0a2 2 0 012-2h4a2 2 0 012 2v0H6v0z"/>
+            </svg>
+            <span class="win-card-title">账户与检索配置</span>
+          </div>
+          <span class="win-card-subtitle">配置 X 账户凭据、存储路径及时间范围</span>
+        </div>
       </div>
 
       <div class="win-card-body">
@@ -50,7 +55,7 @@
                 </svg>
               </button>
 
-              <!-- WinUI 3 Flyout 下拉菜单 -->
+              <!-- WinUI 3 Flyout 下拉层 -->
               <div v-if="comboOpen" class="win-flyout">
                 <div
                   v-for="(id, i) in recent_ids"
@@ -70,10 +75,10 @@
         </div>
 
         <!-- 保存位置 -->
-        <div class="win-form-row">
+        <div class="win-form-row zebra">
           <span class="win-label">保存位置:</span>
           <div class="win-control-wrapper win-path-group">
-            <input v-model.trim="save_path" class="win-textbox" type="text" />
+            <input v-model.trim="save_path" class="win-textbox" type="text" placeholder="选择媒体文件保存目录..." />
             <button class="win-btn win-btn-standard" @click="browseFolder">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M1.5 2.5A1.5 1.5 0 013 1h3.086a1.5 1.5 0 011.06.44l1.414 1.414A1.5 1.5 0 009.62 3.25H13A1.5 1.5 0 0114.5 4.75v8.5A1.5 1.5 0 0113 14.75H3A1.5 1.5 0 011.5 13.25v-10.75zm1.5-.5a.5.5 0 00-.5.5v10.75a.5.5 0 00.5.5h10a.5.5 0 00.5-.5v-8.5a.5.5 0 00-.5-.5H9.621a2.5 2.5 0 01-1.768-.732L6.44 2.104A.5.5 0 006.086 2H3z"/>
@@ -92,7 +97,7 @@
         </div>
 
         <!-- ct0 -->
-        <div class="win-form-row">
+        <div class="win-form-row zebra">
           <span class="win-label">ct0:</span>
           <div class="win-control-wrapper">
             <input v-model.trim="ct0" class="win-textbox" type="text" placeholder="Cookie 中的 ct0" />
@@ -146,7 +151,7 @@
       </div>
     </section>
 
-    <!-- 操作与监控卡片 -->
+    <!-- 卡片 2：操作与监控 (参考图吧工具箱指标卡片质感) -->
     <section class="win-card">
       <div class="win-action-bar">
         <!-- 开始下载 (WinUI 3 Accent Button) -->
@@ -199,14 +204,14 @@
         </button>
       </div>
 
-      <!-- WinUI 3 进度条与状态显示 -->
+      <!-- WinUI 3 细长进度条与状态条 -->
       <div class="win-progress-section">
         <div class="win-progress-track">
           <div class="win-progress-fill" :style="{ width: progressPercent + '%' }"></div>
         </div>
         <div class="win-progress-info">
           <span class="win-progress-text">{{ progressText }}</span>
-          <!-- WinUI 3 InfoBadge 风格状态 -->
+          <!-- WinUI 3 InfoBadge 状态标识 -->
           <div class="win-status-badge">
             <span class="win-status-dot" :style="{ backgroundColor: statusColor }"></span>
             <span class="win-status-text" :style="{ color: statusColor }">{{ statusText }}</span>
@@ -214,27 +219,86 @@
         </div>
       </div>
 
-      <!-- WinUI 3 统计指标卡片网格 -->
+      <!-- 统计指标看板 (类似参考图的硬件信息磁贴质感) -->
       <div class="win-stats-grid">
-        <div class="win-stat-tile" v-for="s in statCards" :key="s.label">
-          <div class="win-stat-accent-bar" :style="{ background: s.color }"></div>
-          <div class="win-stat-main">
-            <div class="win-stat-number" :style="{ color: s.color }">{{ s.value }}</div>
-            <div class="win-stat-unit">{{ s.unit }}</div>
+        <!-- 已下载 -->
+        <div class="win-stat-tile">
+          <div class="win-stat-icon-box" style="background: var(--win-success-subtle); color: var(--win-success);">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 12l4-4h-2.5V2h-3v6H4l4 4z"/>
+              <path d="M2 13.5v1h12v-1H2z"/>
+            </svg>
           </div>
-          <div class="win-stat-title">{{ s.label }}</div>
+          <div class="win-stat-content">
+            <span class="win-stat-category">已下载媒体</span>
+            <div class="win-stat-val-row">
+              <span class="win-stat-value" style="color: var(--win-success);">{{ stat.down }}</span>
+              <span class="win-stat-unit">项</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 已跳过 -->
+        <div class="win-stat-tile">
+          <div class="win-stat-icon-box" style="background: var(--win-warning-subtle); color: var(--win-warning);">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M4.5 3a.5.5 0 00-.5.5v9a.5.5 0 00.757.429l6-4.5a.5.5 0 000-.858l-6-4.5A.5.5 0 004.5 3zm7 0a.5.5 0 00-.5.5v9a.5.5 0 001 0v-9a.5.5 0 00-.5-.5z"/>
+            </svg>
+          </div>
+          <div class="win-stat-content">
+            <span class="win-stat-category">已跳过 (重复)</span>
+            <div class="win-stat-val-row">
+              <span class="win-stat-value" style="color: var(--win-warning);">{{ stat.skip }}</span>
+              <span class="win-stat-unit">项</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 失败 -->
+        <div class="win-stat-tile">
+          <div class="win-stat-icon-box" style="background: var(--win-danger-bg); color: var(--win-danger);">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 10.5a.75.75 0 110-1.5.75.75 0 010 1.5zm.75-7.75v5h-1.5v-5h1.5z"/>
+            </svg>
+          </div>
+          <div class="win-stat-content">
+            <span class="win-stat-category">下载失败</span>
+            <div class="win-stat-val-row">
+              <span class="win-stat-value" style="color: var(--win-danger);">{{ stat.fail }}</span>
+              <span class="win-stat-unit">项</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 实时速度 -->
+        <div class="win-stat-tile">
+          <div class="win-stat-icon-box" style="background: var(--win-accent-subtle); color: var(--win-accent);">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 2a6 6 0 00-6 6c0 1.887.87 3.57 2.235 4.675.244.198.59.186.82-.045.247-.247.23-.65-.035-.87A4.75 4.75 0 013.25 8a4.75 4.75 0 119.5 0c0 1.488-.678 2.818-1.74 3.702-.262.219-.281.62-.036.868.228.23.575.242.82.045A6.002 6.002 0 008 2zm1.28 4.72a.75.75 0 00-1.06 0L6.47 8.47a.75.75 0 101.06 1.06l1.75-1.75a.75.75 0 000-1.06z"/>
+            </svg>
+          </div>
+          <div class="win-stat-content">
+            <span class="win-stat-category">实时下载速度</span>
+            <div class="win-stat-val-row">
+              <span class="win-stat-value" style="color: var(--win-accent);">{{ speedValue }}</span>
+              <span class="win-stat-unit">{{ speedUnit }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- 运行日志卡片 -->
+    <!-- 卡片 3：运行日志控制台 -->
     <section class="win-card win-log-card">
       <div class="win-log-header">
-        <div class="win-log-title-wrap">
-          <svg class="win-section-icon" viewBox="0 0 16 16" width="15" height="15" fill="currentColor">
-            <path d="M2.5 1.5A1.5 1.5 0 001 3v10a1.5 1.5 0 001.5 1.5h11A1.5 1.5 0 0015 13V3a1.5 1.5 0 00-1.5-1.5h-11zm2.146 4.146a.5.5 0 01.708 0L7.5 7.793l2.146-2.147a.5.5 0 01.708.708l-2.5 2.5a.5.5 0 01-.708 0l-2.5-2.5a.5.5 0 010-.708zM4 11h8a.5.5 0 010 1H4a.5.5 0 010-1z"/>
-          </svg>
-          <span class="win-card-title">运行日志</span>
+        <div class="win-header-left">
+          <div class="win-card-title-row">
+            <svg class="win-section-icon" viewBox="0 0 16 16" width="15" height="15" fill="currentColor">
+              <path d="M2.5 1.5A1.5 1.5 0 001 3v10a1.5 1.5 0 001.5 1.5h11A1.5 1.5 0 0015 13V3a1.5 1.5 0 00-1.5-1.5h-11zm2.146 4.146a.5.5 0 01.708 0L7.5 7.793l2.146-2.147a.5.5 0 01.708.708l-2.5 2.5a.5.5 0 01-.708 0l-2.5-2.5a.5.5 0 010-.708zM4 11h8a.5.5 0 010 1H4a.5.5 0 010-1z"/>
+            </svg>
+            <span class="win-card-title">运行日志控制台</span>
+          </div>
+          <span class="win-card-subtitle">实时输出 GraphQL 解析与文件落盘状态</span>
         </div>
         <div class="win-log-actions">
           <button class="win-btn win-btn-standard win-btn-sm" @click="copyLog">
@@ -449,7 +513,7 @@ async function copyLog() {
   }
 }
 
-// ---------------- 进度与统计计算 ----------------
+// ---------------- 进度计算 ----------------
 const progressPercent = computed(() => {
   if (!progress.total) return 0
   return Math.min((progress.current / progress.total) * 100, 100)
@@ -459,12 +523,6 @@ const progressText = computed(() => {
   const pct = Math.floor(progressPercent.value)
   return `${pct}% (${progress.current}/${progress.total})`
 })
-const statCards = computed(() => [
-  { label: '已下载', value: stat.down, unit: '项', color: 'var(--win-success)' },
-  { label: '已跳过 (重复)', value: stat.skip, unit: '项', color: 'var(--win-warning)' },
-  { label: '失败', value: stat.fail, unit: '项', color: 'var(--win-danger)' },
-  { label: '实时速度', value: speedValue.value, unit: speedUnit.value, color: 'var(--win-accent)' },
-])
 
 // ---------------- 生命周期与事件监听 ----------------
 onMounted(async () => {
@@ -650,7 +708,7 @@ function onFinished(cancelled) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 2px 4px 6px;
+  padding: 1px 4px 5px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -661,7 +719,7 @@ function onFinished(cancelled) {
 }
 
 .win-app-title {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--win-text-primary);
   letter-spacing: 0.2px;
@@ -677,7 +735,7 @@ function onFinished(cancelled) {
   border: 1px solid rgba(96, 205, 255, 0.25);
 }
 
-/* WinUI 3 卡片基础 */
+/* WinUI 3 现代质感卡片 */
 .win-card {
   background: var(--win-card-bg);
   border: 1px solid var(--win-card-stroke);
@@ -685,19 +743,35 @@ function onFinished(cancelled) {
   box-shadow: var(--win-shadow-card);
   backdrop-filter: blur(20px);
   position: relative;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.win-card:hover {
+  border-color: var(--win-card-stroke-elevated);
 }
 
 .win-card:not(.win-log-card) {
   flex-shrink: 0;
 }
 
+/* 类似图吧工具箱的标题与说明布局 */
 .win-card-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px 8px;
-  color: var(--win-text-secondary);
+  justify-content: space-between;
+  padding: 10px 16px 8px;
+}
+
+.win-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.win-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
 }
 
 .win-section-icon {
@@ -706,28 +780,44 @@ function onFinished(cancelled) {
 }
 
 .win-card-title {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--win-text-primary);
+  letter-spacing: 0.1px;
+}
+
+.win-card-subtitle {
+  font-size: 11px;
+  color: var(--win-text-secondary);
 }
 
 .win-card-body {
-  padding: 0 16px 12px;
+  padding: 2px 10px 8px;
 }
 
-/* WinUI 3 表单行布局 */
+/* WinUI 3 表单行 - 融入类似图吧工具箱详细信息的斑马条纹质感 */
 .win-form-row {
   display: flex;
   align-items: center;
-  padding: 6px 0;
+  padding: 5px 10px;
+  border-radius: var(--win-radius-control);
   gap: 12px;
+  transition: background 0.15s ease;
+}
+
+.win-form-row.zebra {
+  background: var(--win-row-zebra);
+}
+
+.win-form-row:hover {
+  background: var(--win-row-hover);
 }
 
 .win-label {
-  width: 86px;
+  width: 82px;
   flex-shrink: 0;
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--win-text-secondary);
 }
 
@@ -748,10 +838,10 @@ function onFinished(cancelled) {
   flex: 1;
 }
 
-/* WinUI 3 TextBox 输入框 */
+/* WinUI 3 TextBox 输入控件 */
 .win-textbox {
   width: 100%;
-  height: 32px;
+  height: 31px;
   background: var(--win-control-bg);
   color: var(--win-text-primary);
   border: 1px solid var(--win-control-stroke);
@@ -762,6 +852,7 @@ function onFinished(cancelled) {
   font-size: 12.5px;
   outline: none;
   transition: all 0.15s ease;
+  box-shadow: var(--win-shadow-control);
 }
 
 .win-textbox:hover:not(:disabled) {
@@ -770,7 +861,7 @@ function onFinished(cancelled) {
 }
 
 .win-textbox:focus {
-  background: #1e1e1e;
+  background: var(--win-control-bg-focus);
   border-color: var(--win-control-stroke);
   border-bottom: 2px solid var(--win-accent);
   padding-bottom: 1px;
@@ -779,7 +870,7 @@ function onFinished(cancelled) {
 .win-textbox::placeholder {
   color: var(--win-text-tertiary);
   font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
-  font-size: 12px;
+  font-size: 11.5px;
 }
 
 /* WinUI 3 组合框 (ComboBox / Dropdown) */
@@ -828,7 +919,7 @@ function onFinished(cancelled) {
   z-index: 100;
   background: var(--win-flyout-bg);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: var(--win-radius-card);
+  border-radius: var(--win-radius-tile);
   box-shadow: var(--win-shadow-flyout);
   padding: 4px;
   max-height: 180px;
@@ -940,7 +1031,7 @@ function onFinished(cancelled) {
 }
 
 .win-concurrency-select {
-  height: 32px;
+  height: 31px;
   width: 58px;
   background: var(--win-control-bg);
   border: 1px solid var(--win-control-stroke);
@@ -990,11 +1081,11 @@ function onFinished(cancelled) {
   color: var(--win-text-primary);
 }
 
-/* WinUI 3 按钮规范 */
+/* WinUI 3 按钮规范 (带微光与圆角质感) */
 .win-btn {
-  height: 32px;
-  padding: 0 14px;
-  font-size: 12.5px;
+  height: 31px;
+  padding: 0 13px;
+  font-size: 12px;
   font-weight: 500;
   display: inline-flex;
   align-items: center;
@@ -1042,6 +1133,7 @@ function onFinished(cancelled) {
   font-weight: 600;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 6px rgba(96, 205, 255, 0.25);
 }
 
 .win-btn-accent:hover:not(:disabled) {
@@ -1070,7 +1162,7 @@ function onFinished(cancelled) {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 12px 14px 10px;
   flex-wrap: wrap;
 }
 
@@ -1078,7 +1170,7 @@ function onFinished(cancelled) {
   width: 1px;
   height: 18px;
   background: rgba(255, 255, 255, 0.1);
-  margin: 0 4px;
+  margin: 0 3px;
 }
 
 .win-section-label {
@@ -1092,7 +1184,7 @@ function onFinished(cancelled) {
   display: flex;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 6px;
+  border-radius: var(--win-radius-control);
   padding: 2px;
 }
 
@@ -1102,7 +1194,7 @@ function onFinished(cancelled) {
   border: 1px solid transparent;
   border-radius: 4px;
   padding: 4px 10px;
-  font-size: 12px;
+  font-size: 11.5px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -1120,15 +1212,15 @@ function onFinished(cancelled) {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-/* WinUI 3 细长平滑进度条 */
+/* WinUI 3 细长进度条与状态显示 */
 .win-progress-section {
-  padding: 0 16px 10px;
+  padding: 0 14px 10px;
 }
 
 .win-progress-track {
   width: 100%;
   height: 4px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -1144,11 +1236,11 @@ function onFinished(cancelled) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 6px;
+  margin-top: 5px;
 }
 
 .win-progress-text {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--win-text-secondary);
 }
@@ -1175,56 +1267,72 @@ function onFinished(cancelled) {
   font-weight: 600;
 }
 
-/* 统计卡片网格 (WinUI 3 Tile 风格) */
+/* 统计卡片网格 - 深度还原图吧工具箱指标磁贴质感 (Icon盒 + 类别 + 大数值) */
 .win-stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-  padding: 0 16px 14px;
+  padding: 0 14px 12px;
 }
 
 .win-stat-tile {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: var(--win-radius-tile);
   padding: 8px 10px;
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.15s ease;
+}
+
+.win-stat-tile:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.win-stat-icon-box {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: var(--win-radius-control);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.win-stat-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.win-stat-category {
+  font-size: 11px;
+  color: var(--win-text-secondary);
+  white-space: nowrap;
   overflow: hidden;
-  text-align: center;
+  text-overflow: ellipsis;
 }
 
-.win-stat-accent-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-}
-
-.win-stat-main {
+.win-stat-val-row {
   display: flex;
   align-items: baseline;
-  justify-content: center;
   gap: 4px;
-  margin-top: 2px;
 }
 
-.win-stat-number {
-  font-size: 20px;
+.win-stat-value {
+  font-size: 18px;
   font-weight: 600;
-  font-family: 'Segoe UI Variable Display', sans-serif;
+  font-family: 'Segoe UI Variable Display', 'Segoe UI', sans-serif;
   line-height: 1.2;
 }
 
 .win-stat-unit {
   font-size: 10px;
   color: var(--win-text-secondary);
-}
-
-.win-stat-title {
-  font-size: 11px;
-  color: var(--win-text-secondary);
-  margin-top: 3px;
 }
 
 /* 运行日志卡片 */
@@ -1242,12 +1350,6 @@ function onFinished(cancelled) {
   padding: 10px 16px 8px;
 }
 
-.win-log-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
 .win-log-actions {
   display: flex;
   gap: 6px;
@@ -1255,7 +1357,7 @@ function onFinished(cancelled) {
 
 .win-log-terminal {
   flex: 1;
-  margin: 0 16px 12px;
+  margin: 0 14px 10px;
   background: var(--win-log-bg);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--win-radius-control);

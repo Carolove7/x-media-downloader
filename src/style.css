@@ -1,24 +1,28 @@
-/* WinUI 3 (Windows 11 Fluent Design System) Global Stylesheet */
+/* WinUI 3 (Windows 11 Fluent Design System) - Modern Textured Dark Theme */
 :root {
-  /* Surfaces & Materials */
+  /* Surfaces & Materials (Dark Theme Preserved) */
   --win-bg: #202020;
-  --win-card-bg: rgba(255, 255, 255, 0.05);
-  --win-card-bg-elevated: rgba(255, 255, 255, 0.07);
+  --win-card-bg: rgba(255, 255, 255, 0.045);
   --win-card-stroke: rgba(255, 255, 255, 0.08);
   --win-card-stroke-elevated: rgba(255, 255, 255, 0.12);
-  --win-control-bg: rgba(255, 255, 255, 0.06);
-  --win-control-bg-hover: rgba(255, 255, 255, 0.09);
-  --win-control-bg-active: rgba(255, 255, 255, 0.04);
+  
+  --win-row-zebra: rgba(255, 255, 255, 0.022);
+  --win-row-hover: rgba(255, 255, 255, 0.04);
+
+  --win-control-bg: rgba(255, 255, 255, 0.055);
+  --win-control-bg-hover: rgba(255, 255, 255, 0.085);
+  --win-control-bg-focus: #1b1b1b;
   --win-control-stroke: rgba(255, 255, 255, 0.08);
-  --win-control-elevation: rgba(255, 255, 255, 0.38);
-  --win-flyout-bg: #2c2c2c;
+  --win-control-elevation: rgba(255, 255, 255, 0.35);
+
+  --win-flyout-bg: #2b2b2b;
   --win-log-bg: #181818;
 
   /* Typography Colors */
-  --win-text-primary: rgba(255, 255, 255, 0.95);
+  --win-text-primary: rgba(255, 255, 255, 0.94);
   --win-text-secondary: rgba(255, 255, 255, 0.62);
   --win-text-tertiary: rgba(255, 255, 255, 0.42);
-  --win-text-disabled: rgba(255, 255, 255, 0.36);
+  --win-text-disabled: rgba(255, 255, 255, 0.32);
 
   /* WinUI 3 System Accent (Windows 11 Blue) */
   --win-accent: #60cdff;
@@ -29,20 +33,26 @@
 
   /* Status Colors */
   --win-success: #6ccb5f;
+  --win-success-subtle: rgba(108, 203, 95, 0.12);
+  
   --win-warning: #fce100;
+  --win-warning-subtle: rgba(252, 225, 0, 0.12);
+  
   --win-danger: #ff6b6b;
   --win-danger-bg: rgba(255, 107, 107, 0.12);
   --win-danger-hover: #ff5252;
   --win-danger-stroke: rgba(255, 107, 107, 0.35);
 
   /* Corner Radii */
-  --win-radius-card: 8px;
-  --win-radius-control: 4px;
-  --win-radius-pill: 16px;
+  --win-radius-card: 10px;
+  --win-radius-tile: 8px;
+  --win-radius-control: 6px;
+  --win-radius-pill: 20px;
 
-  /* Elevations */
-  --win-shadow-card: 0 4px 12px rgba(0, 0, 0, 0.25);
-  --win-shadow-flyout: 0 8px 24px rgba(0, 0, 0, 0.45);
+  /* Elevations & Shadows */
+  --win-shadow-card: 0 4px 20px rgba(0, 0, 0, 0.25);
+  --win-shadow-flyout: 0 10px 28px rgba(0, 0, 0, 0.5);
+  --win-shadow-control: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 * {
@@ -71,23 +81,23 @@ body {
 #app {
   display: flex;
   flex-direction: column;
-  padding: 10px 16px 14px;
+  padding: 8px 16px 12px;
   gap: 10px;
 }
 
-/* WinUI 3 Scrollbar */
+/* WinUI 3 Smooth Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.16);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.28);
 }
 
 ::-webkit-scrollbar-track {
